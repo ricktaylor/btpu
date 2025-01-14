@@ -19,18 +19,18 @@ keyword:
 - Bundle Protocol
 
 venue:
-group: WG
-type: Working Group
-mail: WG@example.com
-arch: https://example.com/WG
-github: USER/REPO
-latest: https://example.com/LATEST
+group: "Delay/Disruption Tolerant Networking"
+type: "Working Group"
+mail: "dtn@ietf.org"
+arch: "https://mailarchive.ietf.org/arch/browse/dtn/"
+github: "ricktaylor/btpu"
+latest: "https://ricktaylor.github.io/btpu/draft-taylor-btpu.html"
 
 author:
 
-- fullname: Your Name Here
-  organization: Your Organization Here
-  email: your.email@example.com
+- fullname: Rick Taylor
+  organization: Aalyria Technologies
+  email: rtaylor@aalyria.com
 
 normative:
 
