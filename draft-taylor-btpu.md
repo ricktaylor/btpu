@@ -10,20 +10,21 @@ number:
 date:
 consensus: true
 v: 3
-area: AREA
-workgroup: WG Working Group
+area: INT
+workgroup: DTN Working Group
 keyword:
 
-- next generation
-- unicorn
-- sparkling distributed ledger
-  venue:
-  group: WG
-  type: Working Group
-  mail: WG@example.com
-  arch: https://example.com/WG
-  github: USER/REPO
-  latest: https://example.com/LATEST
+- DTN
+- BPv7
+- Bundle Protocol
+
+venue:
+group: WG
+type: Working Group
+mail: WG@example.com
+arch: https://example.com/WG
+github: USER/REPO
+latest: https://example.com/LATEST
 
 author:
 
