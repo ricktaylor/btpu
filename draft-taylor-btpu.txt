@@ -2,34 +2,18 @@
 
 
 
-WG Working Group                                              Y. N. Here
-Internet-Draft                                    Your Organization Here
-Intended status: Informational                           14 January 2025
+DTN Working Group                                              R. Taylor
+Internet-Draft                                      Aalyria Technologies
+Intended status: Standards Track                         14 January 2025
 Expires: 18 July 2025
 
 
-                           TODO - Your title
-                  draft-todo-yourname-protocol-latest
+               Bundle Transfer Protocol - Unidirectional
+                        draft-taylor-btpu-latest
 
 Abstract
 
    TODO Abstract
-
-About This Document
-
-   This note is to be removed before publishing as an RFC.
-
-   The latest revision of this draft can be found at
-   https://example.com/LATEST.  Status information for this document may
-   be found at https://datatracker.ietf.org/doc/draft-todo-yourname-
-   protocol/.
-
-   Discussion of this document takes place on the WG Working Group
-   mailing list (mailto:WG@example.com), which is archived at
-   https://example.com/WG.
-
-   Source for this draft and an issue tracker can be found at
-   https://github.com/USER/REPO.
 
 Status of This Memo
 
@@ -69,7 +53,7 @@ Table of Contents
    3.  Security Considerations
    4.  IANA Considerations
    5.  Normative References
-   Acknowledgments
+   Appendix A.  Acknowledgments
    Author's Address
 
 1.  Introduction
@@ -103,12 +87,12 @@ Table of Contents
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
 
-Acknowledgments
+Appendix A.  Acknowledgments
 
    TODO acknowledge.
 
 Author's Address
 
-   Your Name Here
-   Your Organization Here
-   Email: your.email@example.com
+   Rick Taylor
+   Aalyria Technologies
+   Email: rtaylor@aalyria.com
