@@ -1348,7 +1348,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Type  | Length (24-bit unsigned integer)                      |
+| Type          | Length (24-bit unsigned integer)              |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                       ... Content ...                         :
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1357,7 +1357,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlParallel" id="section-5-3">
         <dt id="section-5-3.1">Type:</dt>
         <dd style="margin-left: 1.5em" id="section-5-3.2">
-          <p id="section-5-3.2.1">The type of the message, allocated from IANA "BTPU Message Types" registry, expressed as a 4-bit unsigned integer in network byte order<a href="#section-5-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-5-3.2.1">The type of the message, allocated from IANA "BTPU Message Types" registry, expressed as a 8-bit unsigned integer in network byte order<a href="#section-5-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-5-3.3">Length:</dt>
@@ -1528,7 +1528,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <pre>
  0 1 2 3 4 5 6 7
 +-+-+-+-+-+-+-+-+
-| Type  | MBZ   |
+| Type          |
 +-+-+-+-+-+-+-+-+
 </pre><a href="#section-5.6-3" class="pilcrow">¶</a>
 </div>
@@ -1536,11 +1536,6 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
           <dt id="section-5.6-4.1">Type:</dt>
           <dd style="margin-left: 1.5em" id="section-5.6-4.2">
             <p id="section-5.6-4.2.1">The type of the message, in this case zero (0).<a href="#section-5.6-4.2.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-5.6-4.3">MBZ:</dt>
-          <dd style="margin-left: 1.5em" id="section-5.6-4.4">
-            <p id="section-5.6-4.4.1">All bits <span class="bcp14">MUST</span> be zero (0).<a href="#section-5.6-4.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
