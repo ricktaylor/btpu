@@ -10,8 +10,8 @@ number:
 date:
 consensus: true
 v: 3
-area: INT
-workgroup: DTN Working Group
+# area: INT
+# workgroup: DTN Working Group
 keyword:
 
 - DTN
@@ -19,7 +19,7 @@ keyword:
 - Bundle Protocol
 
 venue:
-group: "Delay/Disruption Tolerant Networking"
+#  group: "Delay/Disruption Tolerant Networking"
 type: "Working Group"
 mail: "dtn@ietf.org"
 arch: "https://mailarchive.ietf.org/arch/browse/dtn/"
