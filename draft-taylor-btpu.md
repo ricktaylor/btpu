@@ -100,13 +100,13 @@ All Protocol Messages, with the exception of the [Padding Message](#padding-mess
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Type  | Length (24-bit unsigned integer)                      |
+    | Type          | Length (24-bit unsigned integer)              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                       ... Content ...                         :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Type:
-: The type of the message, allocated from IANA "BTPU Message Types" registry, expressed as a 4-bit unsigned integer in network byte order
+: The type of the message, allocated from IANA "BTPU Message Types" registry, expressed as a 8-bit unsigned integer in network byte order
 
 Length:
 : The length of the message in octets, excluding the 4 octets of the header itself, expressed as a 24-bit unsigned integer in network byte order.
@@ -217,14 +217,11 @@ A Padding Message has a type of zero (0), but in order to support a Padding Mess
 
      0 1 2 3 4 5 6 7
     +-+-+-+-+-+-+-+-+
-    | Type  | MBZ   |
+    | Type          |
     +-+-+-+-+-+-+-+-+
 
 Type:
 : The type of the message, in this case zero (0).
-
-MBZ:
-: All bits MUST be zero (0).
 
 A Padding Message MUST be the final Message in a Datagram. A sender SHOULD set the value of any remaining octets in the Datagram to zero (0), and a receiver MUST ignore any octets that follow the Padding Message.
 
