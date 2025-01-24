@@ -43,7 +43,7 @@ informative:
 
 --- abstract
 
-TODO
+TODO - I always do the abstract last ;)
 
 --- middle
 
@@ -53,11 +53,13 @@ Bundle Protocol version 7 (BPv7) is defined in terms a layered logical architect
 
 In the realm of near- and deep-space communication there are a number of standard link-layer protocols, including USLP, TM, AOS, DVB-S2(X), that share a set of common properties:
 
-- They are unidirectional. Data transmission occurs in one direction only, there is no in-band return path for data.
+- They are unidirectional. Data transfer occurs in one direction only, there is no in-band return path for data.
 - They are frame-based. The link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.
-- They are point-to-point. Although the medium over which the data transmission occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
+- They are point-to-point. Although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
 
 These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.
+
+TODO: More here about not requiring a full IP stack.
 
 # Conventions and Definitions
 
@@ -86,13 +88,13 @@ Segment:
 
 The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is likely to not be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in [](#transfers).
 
-Note: This segmentation is unrelated to Bundle fragmentation as defined in {{RFC9171}}.
+This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
-As a sender may prioritize the transmission of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that transmission of higher priority Bundles may interrupt the transmission of other Bundles, avoiding "head of line blocking", see [](#interleaving-segments) for more detail.
+As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-segments) for more detail.
 
 ## Applicability
 
-The protocol has been designed to transfer BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but the protocol includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 ({{?RFC5050}}) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.
+The protocol has been designed to transfer BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 ({{?RFC5050}}) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.  Additionally, the segmentation mechanism enables the use of this protocol with Bundle formats that do not support some form of fragmentation.
 
 Although designed for any link-layer protocol that shares the characteristics defined in [](#introduction), additional specification may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
 
@@ -109,7 +111,7 @@ Although designed for any link-layer protocol that shares the characteristics de
 
 ## Messages
 
-The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The transmitting node is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages from sender to receiver is the logical control-plane used by the protocol.
+The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The sender is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages from sender to receiver is the logical control-plane used by the protocol.  This document uses the verb "emit" to describe to the writing of a new Message to a Link-layer PDU ready for transmission, to differentiate from the the transmission of the Link-layer PDU itself, as many Messages may emitted prior to the transmission of the containing PDU.
 
 See [](#message-definitions) for detail of each type of Message.
 
@@ -125,17 +127,23 @@ The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is 
 
 ## Segmentation and Transfers {#transfers}
 
-As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into ordered Segments by the sender and each Segment is transmitted in its own a Message.  Each Segment is assigned a monotonically increasing sequence number, and a receiver MUST reassemble the original Bundle by concatenating the Segments in the order of their sequence number.  However, if the complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the [Bundle Message](#bundle-message).
+As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, if a complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the [Bundle Message](#bundle-message).
 
-In addition to a sequence number, every Segment has an associated Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a monotonically increasing number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.
+Each Segment is assigned a monotonically increasing integral sequence number, starting at zero (0).  In addition to a sequence number, every Segment has an associated Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a monotonically increasing number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.
+
+The receiver reassembles the transferred Bundle by concatenating the Segments in the order of their sequence number.  When all the Segments have been received and concatenated, the receiver passes the recombined Bundle to the upper layer for further processing.
 
 ### Transfer Lifetime {#transfer-liveness}
 
-The transmission of a sequence of Segments of a Bundle begins with a [Transfer Start Message](#transfer-start-message), carrying the Transfer identifier and the first Segment, which indicates a new Transfer is starting.  Further Segments, excluding the final Segment, are transmitted via the [Transfer Segment Message](#transfer-segment-message), carrying the same Transfer identifier.  The end of a sequence of Segments is indicated by the transmission of a [Transfer End Message](#transfer-end-message), including the final Segment and the identifier of the Transfer that is now complete.
+The transfer of a sequence of Segments of a Bundle begins with emitting a [Transfer Start Message](#transfer-start-message), carrying the Transfer identifier and the first Segment, which indicates a new Transfer is starting.  Further Segments, excluding the final Segment, are emitted via the [Transfer Segment Message](#transfer-segment-message), carrying the same Transfer identifier.  The end of a sequence of Segments is indicated by emitting a [Transfer End Message](#transfer-end-message), including the final Segment and the identifier of the Transfer that is now complete.  A Transfer is said to be "active" between emitting the first Transfer Start Message, and emitting the first Transfer End Message referencing the Transfer.
 
-A Transfer may be aborted by the sender before all Segments are sent by the transmission of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.
+A Transfer may be aborted by the sender while a Transfer is active by the transmission of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.
 
 ### Transfer Number Roll-over
+
+Transfer numbers are encoded in the protocol using 32-bit unsigned integers, and therefore to avoid placing a limit on the total number of Bundles that may be transferred between peers, numbers are allowed to "roll-over" to zero: the next number in the sequence is the previous number incremented by one, modulus 2^32.
+
+TODO: Due to unexpected loss of Link-layer PDUs, a sender and receive may not have a synchronized view of the active state of a Transfer, and so the protocol rules are all based on a local view.
 
 ### Interleaving Segments
 
@@ -144,6 +152,8 @@ A Transfer may be aborted by the sender before all Segments are sent by the tran
 Transfer Messages associated with different Transfers, i.e with different Transfer Number field values, MAY be interleaved, but Transfer Segment Messages associated with the same Transfer SHOULD be emitted in sequence number order.
 
 ## Handling Link-layer PDU Loss
+
+Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be unexpectedly lost in transmission, resulting in the loss of Messages.
 
 TODO: Because the underlying link-layer is assumed to be unidirectional and unreliable, the protocol allows the sender to repeat the transmission of Bundle segments as desired in order to reduce the likelihood of data loss.
 
@@ -168,7 +178,7 @@ Length:
 : The length of the Message in octets, excluding the 4 octets of the header itself, expressed as a 24-bit unsigned integer in network byte order.
 
 Content:
-: A sequence of octets of data of variable length determined by the corresponding length field, encoded according to the type of the Message.
+: A sequence of octets of data of variable length determined by the corresponding Length field value, encoded according to the type of the Message.
 
 ## Bundle Message
 
@@ -194,13 +204,17 @@ Transfer Number:
 : The numeric identifier of the new Transfer that is starting, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Data:
-: The octets of the first Segment of the Transfer, with the length calculated as the Message content length minus the four (4) octets of the Transfer Number.
+: The octets of the first Segment of the Transfer, with the length calculated as the Message content length excluding the four (4) octets of the Transfer Number.
 
 To reduce signalling overhead, the Transfer Start Message does not include a Segment Sequence Number field as the sequence number is implicitly zero (0).
 
+The Transfer Number field value MUST NOT match the numeric identifier of a currently [active](#transfer-liveness) Transfer.
+
+Transfer Start Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 8 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+
 ## Transfer Segment Message
 
-The Transfer Segment Message is used to encapsulate the next segment of a multi-segment Bundle Transfer.
+The Transfer Segment Message is used to encapsulate the next segment of an active multi-segment Bundle Transfer.
 
 A Transfer Segment Message has a type of TBD. The Message Content field is formatted as follows:
 
@@ -215,13 +229,15 @@ A Transfer Segment Message has a type of TBD. The Message Content field is forma
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the Transfer that this Segment is part of, encoded as a 32-bit unsigned integer in network byte order.
+: The numeric identifier of the [active](#transfer-liveness) Transfer that this Segment is part of, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Sequence Number:
 : The non-zero sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Data:
-: The octets of a Segment of the Transfer, with the length calculated as the Message content length minus the eight (8) octets of the Transfer Number and Segment Sequence Number.
+: The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.
+
+Transfer Segment Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer End Message
 
@@ -240,13 +256,15 @@ A Transfer End Message has a type of TBD. The Message Content field is formatted
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the Transfer that is completing, encoded as a 32-bit unsigned integer in network byte order.
+: The numeric identifier of the [active](#transfer-liveness) Transfer that is completing, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Sequence Number:
 : The sequence number of the final Segment, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Data:
-: The octets of the final Segment of the Transfer, with the length calculated as the Message content length minus the eight (8) octets of the Transfer Number and Segment Sequence Number.
+: The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.
+
+Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer Cancel Message
 
@@ -261,11 +279,11 @@ A Transfer Cancel Message has a type of TBD. The Message Content field is format
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the Transfer that is cancelled, encoded as a 32-bit unsigned integer in network byte order.
+: The numeric identifier of the [active](#transfer-liveness) Transfer that is cancelled, encoded as a 32-bit unsigned integer in network byte order.
 
 The Transfer Cancel Message has no additional content, and hence has a fixed length of 4 octets.
 
-A Transfer Cancel Message SHOULD NOT be sent before a [Transfer Start Message](#transfer-start-message), or after a [Transfer End Message](#transfer-end-message) with the same Transfer number. A peer that receives a Transfer Cancel Message with a transfer number that does not match an [active Transfer](#transfer-liveness) MUST ignore the Message.
+A peer that receives a Transfer Cancel Message with a Transfer Number field value that does not match the numeric identifier of an [active](#transfer-liveness) Transfer MUST ignore the Message.
 
 ## Definite Padding Message
 
@@ -273,7 +291,7 @@ The Definite Padding Message is used to add padding to a Link-layer PDU.
 
 A Definite Padding Message has a type of TBD. Any content it contains has no semantic meaning, and a sender SHOULD set the content to a sequence of zero (0) octets.  A receiver MUST ignore any Message content.
 
-It is valid for this Message to have no content, i.e. a length field value of zero (0), adding a total of four (4) octets of padding to the Link-layer PDU.
+It is valid for this Message to have no content, i.e. a Length field value of zero (0), adding a total of four (4) octets of padding to the Link-layer PDU.
 
 ## Indefinite Padding Message
 
@@ -337,7 +355,7 @@ An example of the transmission of three Bundles of varying sizes and equal prior
     +----------------------+----------------------+----------------------+
 {: #fig-sequential title="Segmentation of a sequence of Bundles of equal priority" }
 
-Bundle A is transmitted as two Segments, included in the first and second Link-layer PDU, as Transfer 1.  Bundle B fits completely in the second Link-layer PDU, and is therefore transferred without segmentation.  Bundle C is transferred as two Segments split between the second and third PDU, but padding is required to fill the third PDU.  An alternative algorithm could have selected to not segment Bundle C, but to pad the second PDU and include Bundle C without segmentation in the third PDU, without changing the semantics, as an implementation preference.
+Bundle A is transferred as two Segments, included in the first and second Link-layer PDU, as Transfer 1.  Bundle B fits completely in the second Link-layer PDU, and is therefore transferred without segmentation.  Bundle C is transferred as two Segments split between the second and third PDU, but padding is required to fill the third PDU.  An alternative algorithm could have selected to not segment Bundle C, but to pad the second PDU and include Bundle C without segmentation in the third PDU, without changing the semantics, as an implementation preference.
 
 # Acknowledgments
 
