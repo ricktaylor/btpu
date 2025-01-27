@@ -90,7 +90,7 @@ The purpose of the protocol is to transfer a series of Bundles between two nodes
 
 This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
-As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-segments) for more detail.
+As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.
 
 ## Applicability
 
@@ -115,7 +115,7 @@ The basic primitive of the protocol is the Message, a self-describing unit of pr
 
 See [](#message-definitions) for detail of each type of Message.
 
-### Padding
+## Padding
 
 Because the size of a Bundle is not expected to exactly match the size of a Link-layer PDU, an implementation will likely need to add padding to the PDU so that the Link-layer PDU size requirements are met.  Two Messages are available for this purpose: The [Definite Padding Message](#definite-padding-message) and the [Indefinite Padding Message](#indefinite-padding-message).  Padding Messages are valid at any point within a Link-layer PDU.
 
@@ -125,7 +125,7 @@ When the link-layer protocol provides variable length Link-layer PDUs, implement
 
 The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is an implementation matter.
 
-## Segmentation and Transfers {#transfers}
+# Segmentation and Transfers {#transfers}
 
 As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, if a complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the [Bundle Message](#bundle-message).
 
@@ -133,31 +133,35 @@ Each Segment is assigned a monotonically increasing integral sequence number, st
 
 The receiver reassembles the transferred Bundle by concatenating the Segments in the order of their sequence number.  When all the Segments have been received and concatenated, the receiver passes the recombined Bundle to the upper layer for further processing.
 
-### Transfer Lifetime {#transfer-liveness}
+Transfer numbers are encoded using 32-bit unsigned integers, and to avoid placing a limit on the total number of Bundles that may be transferred between peers, numbers are allowed to "roll-over" to zero: the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
-The transfer of a sequence of Segments of a Bundle begins with emitting a [Transfer Start Message](#transfer-start-message), carrying the Transfer identifier and the first Segment, which indicates a new Transfer is starting.  Further Segments, excluding the final Segment, are emitted via the [Transfer Segment Message](#transfer-segment-message), carrying the same Transfer identifier.  The end of a sequence of Segments is indicated by emitting a [Transfer End Message](#transfer-end-message), including the final Segment and the identifier of the Transfer that is now complete.  A Transfer is said to be "active" between emitting the first Transfer Start Message, and emitting the first Transfer End Message referencing the Transfer.
+## Interleaving Transfers
 
-A Transfer may be aborted by the sender while a Transfer is active by the transmission of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.
+TODO: Transfer Messages associated with different Transfers, i.e with different Transfer Number field values, MAY be interleaved.
 
-### Transfer Number Roll-over
+## Transfer Lifetime {#transfer-liveness}
 
-Transfer numbers are encoded in the protocol using 32-bit unsigned integers, and therefore to avoid placing a limit on the total number of Bundles that may be transferred between peers, numbers are allowed to "roll-over" to zero: the next number in the sequence is the previous number incremented by one, modulus 2^32.
+The transfer of a sequence of Segments of a Bundle a sender MUST begin by emitting a [Transfer Start Message](#transfer-start-message), carrying the Transfer identifier and the first Segment, which indicates a new Transfer is starting.  Further Segments, excluding the final Segment, MUST be emitted via the [Transfer Segment Message](#transfer-segment-message), carrying the same Transfer identifier.  The end of a sequence of Segments MUST be indicated by emitting a [Transfer End Message](#transfer-end-message), including the final Segment and the identifier of the Transfer that is now complete.  A sender considers a Transfer to be "active" between emitting the first Transfer Start Message, and emitting the first Transfer End Message referencing the Transfer.
 
-TODO: Due to unexpected loss of Link-layer PDUs, a sender and receive may not have a synchronized view of the active state of a Transfer, and so the protocol rules are all based on a local view.
+TODO: Because Messages may be in transmission lost due to the loss of Link-layer PDUs, and a sender may emit duplicate Message as a defense against loss, see [](#handling-loss), a receiver has a looser perspective on the liveness of a Transfer.
 
-### Interleaving Segments
+## Cancelling Transfers
 
-    DIAGRAM!
+A Transfer may be aborted by the sender while a Transfer is active by the emitting of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.
 
-Transfer Messages associated with different Transfers, i.e with different Transfer Number field values, MAY be interleaved, but Transfer Segment Messages associated with the same Transfer SHOULD be emitted in sequence number order.
+# Handling Link-layer PDU Loss {#handling-loss}
 
-## Handling Link-layer PDU Loss
+Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be unexpectedly lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Bundle segments.
 
-Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be unexpectedly lost in transmission, resulting in the loss of Messages.
+The repetition of Segments is logically separate from any mechanism the underlying link-layer protocol may have to repeat the transmission of frames, although both aim to protect against information loss through redundancy and may be used as required by a deployment.  If a link-layer protocol receives a duplicate transmission frame, it SHOULD be delivered to this protocol only once.
 
-TODO: Because the underlying link-layer is assumed to be unidirectional and unreliable, the protocol allows the sender to repeat the transmission of Bundle segments as desired in order to reduce the likelihood of data loss.
+TODO: The loss and repetition of Messages results in Transfer id being all over the place!
 
-### Segment Repetition
+## Forward Error Correction
+
+We could reference {{?RFC6363}}, and include a Transfer FEC Start and Segment Repair Message.[^1]
+
+[^1]: This is a question for the WG
 
 # Message Definitions
 
@@ -186,6 +190,8 @@ The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used b
 
 A Bundle Message has a type of TBD. The Message Content MUST be a valid Bundle.
 
+Emitting a Bundle Message with a Length field value of zero (0), i.e no Bundle content, only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+
 ## Transfer Start Message
 
 The Transfer Start Message is used to encapsulate the first segment of a new multi-segment Bundle Transfer.
@@ -197,20 +203,29 @@ A Transfer Start Message has a type of TBD. The Message Content field is formatt
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     | Transfer Number                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Total Transfer Length                                         :
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    :                         ... Total Transfer Length (continued) |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                    ... Segment Data ...                       :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
 : The numeric identifier of the new Transfer that is starting, encoded as a 32-bit unsigned integer in network byte order.
 
+Total Transfer Length:
+: The total length of the reassembled Bundle, encoded as a 64-bit unsigned integer in network byte order.
+
 Segment Data:
 : The octets of the first Segment of the Transfer, with the length calculated as the Message content length excluding the four (4) octets of the Transfer Number.
+
+So that a receiving implementation may preallocate the buffers required to reassemble the segmented Bundle, the Total Transfer Length field contains the total length of the Bundle to be reassembled.
 
 To reduce signalling overhead, the Transfer Start Message does not include a Segment Sequence Number field as the sequence number is implicitly zero (0).
 
 The Transfer Number field value MUST NOT match the numeric identifier of a currently [active](#transfer-liveness) Transfer.
 
-Transfer Start Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 8 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+Transfer Start Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 16 octets.  The Total Transfer Length field value SHOULD NOT be zero, as a zero-length Bundle is not a valid Transfer.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer Segment Message
 
@@ -295,7 +310,7 @@ It is valid for this Message to have no content, i.e. a Length field value of ze
 
 ## Indefinite Padding Message
 
-An Indefinite Padding Message has a type of zero (0), but in order to support padding with a minimum total length of one octet, the Message does not include an explicit Length or Content field, and hence has the following layout:
+An Indefinite Padding Message has a type of zero (0), and in order to support padding with a minimum total length of one octet, the Message does not include an explicit Length or Content field, and hence has the following layout:
 
      0 1 2 3 4 5 6 7
     +-+-+-+-+-+-+-+-+
@@ -356,6 +371,14 @@ An example of the transmission of three Bundles of varying sizes and equal prior
 {: #fig-sequential title="Segmentation of a sequence of Bundles of equal priority" }
 
 Bundle A is transferred as two Segments, included in the first and second Link-layer PDU, as Transfer 1.  Bundle B fits completely in the second Link-layer PDU, and is therefore transferred without segmentation.  Bundle C is transferred as two Segments split between the second and third PDU, but padding is required to fill the third PDU.  An alternative algorithm could have selected to not segment Bundle C, but to pad the second PDU and include Bundle C without segmentation in the third PDU, without changing the semantics, as an implementation preference.
+
+## Segmentation of a sequence of Bundles of different priority
+
+DIAGRAM!
+
+## Message repetition
+
+DIAGRAM!
 
 # Acknowledgments
 
