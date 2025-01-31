@@ -4,8 +4,8 @@
 
 Network Working Group                                          R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                         27 January 2025
-Expires: 31 July 2025
+Intended status: Standards Track                         31 January 2025
+Expires: 4 August 2025
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -30,7 +30,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 July 2025.
+   This Internet-Draft will expire on 4 August 2025.
 
 Copyright Notice
 
@@ -57,24 +57,26 @@ Table of Contents
      3.3.  Padding
    4.  Segmentation and Transfers
      4.1.  Interleaving Transfers
-     4.2.  Transfer Lifetime
-     4.3.  Cancelling Transfers
+     4.2.  Cancelling Transfers
    5.  Handling Link-layer PDU Loss
-     5.1.  Forward Error Correction
-   6.  Message Definitions
-     6.1.  Bundle Message
-     6.2.  Transfer Start Message
-     6.3.  Transfer Segment Message
-     6.4.  Transfer End Message
-     6.5.  Transfer Cancel Message
-     6.6.  Definite Padding Message
-     6.7.  Indefinite Padding Message
-   7.  Security Considerations
-   8.  Deployment Considerations
-   9.  IANA Considerations
-   10. References
-     10.1.  Normative References
-     10.2.  Informative References
+     5.1.  Segment Repetition
+     5.2.  Forward Error Correction
+   6.  Transfer Window
+   7.  Message Definitions
+     7.1.  Bundle Message
+     7.2.  Transfer Start Message
+     7.3.  Transfer Segment Message
+     7.4.  Transfer Repair Message
+     7.5.  Transfer End Message
+     7.6.  Transfer Cancel Message
+     7.7.  Definite Padding Message
+     7.8.  Indefinite Padding Message
+   8.  Security Considerations
+   9.  Deployment Considerations
+   10. IANA Considerations
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
    Appendix A.  Examples
      A.1.  Segmentation of a sequence of Bundles of equal priority
      A.2.  Segmentation of a sequence of Bundles of different priority
@@ -94,8 +96,8 @@ Table of Contents
    link-layer protocols to transfer bundles between BPAs.
 
    In the realm of near- and deep-space communication there are a number
-   of standard link-layer protocols, including USLP, TM, AOS, DVB-S2(X),
-   that share a set of common properties:
+   of standardized link-layer protocols, including [USLP], [TM], [AOS],
+   [DVB-S2X], that share a set of common properties:
 
    *  They are unidirectional.  Data transfer occurs in one direction
       only, there is no in-band return path for data.
@@ -117,7 +119,10 @@ Table of Contents
    for implementation over any link-layer protocol that shares these
    characteristics.
 
-   TODO: More here about not requiring a full IP stack.
+   Although primarily designed for space communication, the protocol is
+   applicable to other link-layer technologies which can share these
+   characteristics, for example 5G Unstructured PDUs [_5G], or
+   [IEEE.802.3], without requiring a full IP stack.
 
 2.  Conventions and Definitions
 
@@ -140,7 +145,7 @@ Table of Contents
       transmission unit or frame, as defined by the link-layer protocol
       specification.
 
-   Message:  A single protocol data item, see Section 6.
+   Message:  A single protocol data item, see Section 7.
 
    Transfer:  The context in which the transmission of the Segments of a
       single Bundle occurs, see Section 4.
@@ -189,9 +194,9 @@ Table of Contents
    fragmentation.
 
    Although designed for any link-layer protocol that shares the
-   characteristics defined in Section 1, additional specification may be
-   required to map the constructs of the link-layer protocol to the
-   mechanisms defined in this specification.
+   characteristics defined in Section 1, additional specification or
+   profiling may be required to map the constructs of the link-layer
+   protocol to the mechanisms defined in this specification.
 
                          +----------------------+
                          |  DTN Application     |
@@ -221,7 +226,7 @@ Table of Contents
    from the the transmission of the Link-layer PDU itself, as many
    Messages may emitted prior to the transmission of the containing PDU.
 
-   See Section 6 for detail of each type of Message.
+   See Section 7 for detail of each type of Message.
 
 3.3.  Padding
 
@@ -229,8 +234,8 @@ Table of Contents
    size of a Link-layer PDU, an implementation will likely need to add
    padding to the PDU so that the Link-layer PDU size requirements are
    met.  Two Messages are available for this purpose: The Definite
-   Padding Message (Section 6.6) and the Indefinite Padding Message
-   (Section 6.7).  Padding Messages are valid at any point within a
+   Padding Message (Section 7.7) and the Indefinite Padding Message
+   (Section 7.8).  Padding Messages are valid at any point within a
    Link-layer PDU.
 
    It is RECOMMENDED that implementations use the Definite Padding
@@ -258,7 +263,7 @@ Table of Contents
    sender and each Segment is emitted in its own a Message.  However, if
    a complete Bundle can fit in the next Link-layer PDU, then the Bundle
    SHOULD be transferred without segmentation, see the Bundle Message
-   (Section 6.1).
+   (Section 7.1).
 
    Each Segment is assigned a monotonically increasing integral sequence
    number, starting at zero (0).  In addition to a sequence number,
@@ -268,46 +273,43 @@ Table of Contents
    as an identifier, with each identified Transfer mapping to the
    segmentation of a single Bundle.
 
-   The receiver reassembles the transferred Bundle by concatenating the
-   Segments in the order of their sequence number.  When all the
-   Segments have been received and concatenated, the receiver passes the
-   recombined Bundle to the upper layer for further processing.
+   The transfer of a sequence of Segments of a Bundle a sender MUST
+   begin by emitting a Transfer Start Message (Section 7.2), carrying
+   the Transfer identifier and the first Segment, which indicates a new
+   Transfer is starting.  Further Segments, excluding the final Segment,
+   MUST be emitted via the Transfer Segment Message (Section 7.3)
+   carrying the same Transfer identifier.  The end of a sequence of
+   Segments MUST be indicated by emitting a Transfer End Message
+   (Section 7.5), including the final Segment and the identifier of the
+   Transfer that is now complete.
 
-   Transfer numbers are encoded using 32-bit unsigned integers, and to
+   The receiver reassembles the transferred Bundle by concatenating the
+   Segments that share a common Transfer number in the order of their
+   sequence number.  When all the Segments have been received and
+   concatenated, the receiver is assumed to pass the recombined Bundle
+   to an upper layer for further processing.
+
+   Transfer numbers are encoded using 24-bit unsigned integers.  To
    avoid placing a limit on the total number of Bundles that may be
-   transferred between peers, numbers are allowed to "roll-over" to
-   zero: the next number in the sequence is the previous number
-   incremented by one, modulo 2^32.
+   transferred between peers, numbers are allowed to "roll-over" via
+   zero and repeat, i.e. the next number in the sequence is the previous
+   number incremented by one, modulo 2^24.
 
 4.1.  Interleaving Transfers
 
-   TODO: Transfer Messages associated with different Transfers, i.e with
-   different Transfer Number field values, MAY be interleaved.
+   In order to support the transmission of Bundles with different
+   priorities, Transfer Messages associated with different Transfers,
+   i.e. with different Transfer numbers, MAY be interleaved.  This
+   allows senders to interrupt the emission of a sequence of Segments
+   associated with one Transfer with one or more Segments of another
+   Transfer, preventing a large lower priority Transfer blocking a
+   higher priority Transfers.
 
-4.2.  Transfer Lifetime
+4.2.  Cancelling Transfers
 
-   The transfer of a sequence of Segments of a Bundle a sender MUST
-   begin by emitting a Transfer Start Message (Section 6.2), carrying
-   the Transfer identifier and the first Segment, which indicates a new
-   Transfer is starting.  Further Segments, excluding the final Segment,
-   MUST be emitted via the Transfer Segment Message (Section 6.3),
-   carrying the same Transfer identifier.  The end of a sequence of
-   Segments MUST be indicated by emitting a Transfer End Message
-   (Section 6.4), including the final Segment and the identifier of the
-   Transfer that is now complete.  A sender considers a Transfer to be
-   "active" between emitting the first Transfer Start Message, and
-   emitting the first Transfer End Message referencing the Transfer.
-
-   TODO: Because Messages may be in transmission lost due to the loss of
-   Link-layer PDUs, and a sender may emit duplicate Message as a defense
-   against loss, see Section 5, a receiver has a looser perspective on
-   the liveness of a Transfer.
-
-4.3.  Cancelling Transfers
-
-   A Transfer may be aborted by the sender while a Transfer is active by
-   the emitting of a Transfer Cancel Message (Section 6.5) containing
-   the identifier of the Transfer to cancel.
+   A Transfer may be aborted by the sender while a Transfer is in
+   progress by the emitting of a Transfer Cancel Message (Section 7.6)
+   containing the identifier of the Transfer to cancel.
 
 5.  Handling Link-layer PDU Loss
 
@@ -318,6 +320,15 @@ Table of Contents
    mechanism to trigger the retransmission of lost Messages; instead the
    protocol allows the sender to repeat the transmission of Bundle
    segments.
+
+   The protection mechanisms that follow are logically separate from any
+   mechanism the underlying link-layer protocol may have to protect
+   against information loss through redundancy and erasure coding, and
+   may be used as required by a deployment.  If a link-layer protocol
+   receives a duplicate transmission frame, it SHOULD be delivered to
+   this protocol only once.
+
+5.1.  Segment Repetition
 
    The repetition of Segments is logically separate from any mechanism
    the underlying link-layer protocol may have to repeat the
@@ -330,19 +341,38 @@ Table of Contents
    TODO: The loss and repetition of Messages results in Transfer id
    being all over the place!
 
-5.1.  Forward Error Correction
+   TODO: A sender MAY repeatedly emit Transfer End and Transfer Cancel
+   Messages.
 
-   We could reference [RFC6363], and include a Transfer FEC Start and
-   Segment Repair Message.
-   // This is a question for the WG
+5.2.  Forward Error Correction
 
-6.  Message Definitions
+   TODO: This protocol uses the framework defined in [RFC8681] for
+   Forward Error Correction.  Configuration is performed out-of-band.
+   FEC Instance ID is carried in Transfer Messages, and MUST be pre-
+   agreed.  FEC Instance ID 0 means "No FEC".
+
+6.  Transfer Window
+
+   TODO: Rework into sliding window.
+
+   A sender considers a Transfer to be "active" between emitting the
+   first Transfer Start Message, and emitting the first Transfer End
+   Message referencing the Transfer.
+
+   Because Messages may be in transmission lost due to the loss of Link-
+   layer PDUs, and a sender may emit duplicate Messages as a defense
+   against loss, see Section 5.1, a receiver MUST consider a Transfer
+   "active" from the reception of the first Transfer Start, Transfer
+   Segment, or Transfer Repair Message, until reception of the first
+   Transfer End or Transfer Cancel Message.
+
+7.  Message Definitions
 
    All protocol Messages except the Indefinite Padding Message
-   (Section 6.7) follow the common "Type-Length-Value" formatting
-   pattern, with each Message being identified by a 32-bit header that
-   encodes the type of the Message, and the length of the content of the
-   Message.
+   (Section 7.8) follow the common "Type-Length-Value" formatting
+   pattern, with each Message being identified by a four octet header
+   that encodes the type of the Message, and the length of the content
+   of the Message.
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -364,7 +394,7 @@ Table of Contents
       by the corresponding Length field value, encoded according to the
       type of the Message.
 
-6.1.  Bundle Message
+7.1.  Bundle Message
 
    The Bundle Message is used to encapsulate an entire Bundle, and
    SHOULD be used by an implementation when a Bundle will fit in its
@@ -379,7 +409,7 @@ Table of Contents
    no Bundle content, only adds control-plane overhead and SHOULD NOT be
    used as an alternative form of padding.
 
-6.2.  Transfer Start Message
+7.2.  Transfer Start Message
 
    The Transfer Start Message is used to encapsulate the first segment
    of a new multi-segment Bundle Transfer.
@@ -390,7 +420,7 @@ Table of Contents
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Transfer Number                                               |
+   | Transfer Number                               | FEC ID        |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    | Total Transfer Length                                         :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -400,15 +430,19 @@ Table of Contents
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    Transfer Number:  The numeric identifier of the new Transfer that is
-      starting, encoded as a 32-bit unsigned integer in network byte
+      starting, encoded as a 24-bit unsigned integer in network byte
       order.
+
+   FEC ID:  The FEC Instance ID, see Forward Error Correction
+      (Section 5.2).
 
    Total Transfer Length:  The total length of the reassembled Bundle,
       encoded as a 64-bit unsigned integer in network byte order.
 
    Segment Data:  The octets of the first Segment of the Transfer, with
       the length calculated as the Message content length excluding the
-      four (4) octets of the Transfer Number.
+      12 octets of the Transfer Number, FEC Instance, and Total Transfer
+      Length.
 
    So that a receiving implementation may preallocate the buffers
    required to reassemble the segmented Bundle, the Total Transfer
@@ -420,7 +454,7 @@ Table of Contents
    implicitly zero (0).
 
    The Transfer Number field value MUST NOT match the numeric identifier
-   of a currently active (Section 4.2) Transfer.
+   of a currently in-progress (Section 6) Transfer.
 
    Transfer Start Messages SHOULD NOT have zero octets of Segment Data,
    i.e. the total length of the Message SHOULD be greater than 16
@@ -429,10 +463,10 @@ Table of Contents
    control-plane overhead and SHOULD NOT be used as an alternative form
    of padding.
 
-6.3.  Transfer Segment Message
+7.3.  Transfer Segment Message
 
    The Transfer Segment Message is used to encapsulate the next segment
-   of an active multi-segment Bundle Transfer.
+   of an in-progress multi-segment Bundle Transfer.
 
    A Transfer Segment Message has a type of TBD.  The Message Content
    field is formatted as follows:
@@ -440,16 +474,19 @@ Table of Contents
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Transfer Number                                               |
+   | Transfer Number                               | FEC ID        |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    | Segment Sequence Number                                       |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                    ... Segment Data ...                       :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-   Transfer Number:  The numeric identifier of the active (Section 4.2)
-      Transfer that this Segment is part of, encoded as a 32-bit
-      unsigned integer in network byte order.
+   Transfer Number:  The numeric identifier of the in-progress
+      (Section 6) Transfer that this Segment is part of, encoded as a
+      24-bit unsigned integer in network byte order.
+
+   FEC ID:  The FEC Instance ID, see Forward Error Correction
+      (Section 5.2).
 
    Segment Sequence Number:  The non-zero sequence number of the
       Segment, encoded as a 32-bit unsigned integer in network byte
@@ -457,15 +494,60 @@ Table of Contents
 
    Segment Data:  The octets of a Segment of the Transfer, with the
       length calculated as the Message content length excluding the
-      eight (8) octets of the Transfer Number and Segment Sequence
-      Number.
+      eight (8) octets of the Transfer Number, FEC Instance, and Segment
+      Sequence Number.
 
    Transfer Segment Messages SHOULD NOT have zero octets of Segment
    Data, i.e. the total length of the Message SHOULD be greater than 12
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-6.4.  Transfer End Message
+7.4.  Transfer Repair Message
+
+   The Transfer Repair Message is used to carry repair information when
+   Forward Error Correction is in use, see Section 5.2.  This message
+   corresponds to the "Repair Packet" in Section 5.1 of [RFC6363].
+
+   A Transfer Repair Message has a type of TBD.  The Message Content
+   field is formatted as follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Transfer Number                               | FEC ID        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Segment Sequence Number                                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Segment Data Length                                           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                 ... Segment Repair Data ...                   :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Transfer Number:  The numeric identifier of the in-progress
+      (Section 6) Transfer that this Segment is part of, encoded as a
+      24-bit unsigned integer in network byte order.
+
+   FEC ID:  The FEC Instance ID, see Forward Error Correction
+      (Section 5.2).
+
+   Segment Sequence Number:  The non-zero sequence number of the
+      Segment, encoded as a 32-bit unsigned integer in network byte
+      order.
+
+   Segment Data Length:  The length of the Segment data to be repaired,
+      corresponding to the "Source Packet" in Section 5.1 of [RFC6363].
+
+   Segment Repair Data:  The octets of the repair data for a Segment of
+      the Transfer, with the length calculated as the Message content
+      length excluding the 12 octets of the Transfer Number, FEC
+      Instance, Segment Sequence Number, and Segment Data Length.
+
+   Transfer Repair Messages SHOULD NOT have zero octets of Segment
+   Repair Data, i.e. the total length of the Message SHOULD be greater
+   than 16 octets.  Such Messages only add control-plane overhead and
+   SHOULD NOT be used as an alternative form of padding.
+
+7.5.  Transfer End Message
 
    The Transfer End Message is used to encapsulate the last segment of a
    multi-segment Bundle Transfer, and complete the Transfer.
@@ -476,31 +558,35 @@ Table of Contents
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Transfer Number                                               |
+   | Transfer Number                               | FEC ID        |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    | Segment Sequence Number                                       |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                    ... Segment Data ...                       :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-   Transfer Number:  The numeric identifier of the active (Section 4.2)
-      Transfer that is completing, encoded as a 32-bit unsigned integer
-      in network byte order.
+   Transfer Number:  The numeric identifier of the in-progress
+      (Section 6) Transfer that is completing, encoded as a 24-bit
+      unsigned integer in network byte order.
 
-   Segment Sequence Number:  The sequence number of the final Segment,
-      encoded as a 32-bit unsigned integer in network byte order.
+   FEC ID:  The FEC Instance ID, see Forward Error Correction
+      (Section 5.2).
+
+   Segment Sequence Number:  The non-zero sequence number of the final
+      Segment, encoded as a 32-bit unsigned integer in network byte
+      order.
 
    Segment Data:  The octets of the final Segment of the Transfer, with
       the length calculated as the Message content length excluding the
-      eight (8) octets of the Transfer Number and Segment Sequence
-      Number.
+      eight (8) octets of the Transfer Number, FEC Instance, and Segment
+      Sequence Number.
 
    Transfer End Messages SHOULD NOT have zero octets of Segment Data,
    i.e. the total length of the Message SHOULD be greater than 12
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-6.5.  Transfer Cancel Message
+7.6.  Transfer Cancel Message
 
    The Transfer Cancel Message is used to indicate that the indicated
    Transfer is being aborted, and any prior or later received Segments
@@ -512,21 +598,25 @@ Table of Contents
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Transfer Number                                               |
+   | Transfer Number                               | MBZ           |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-   Transfer Number:  The numeric identifier of the active (Section 4.2)
-      Transfer that is cancelled, encoded as a 32-bit unsigned integer
-      in network byte order.
+   Transfer Number:  The numeric identifier of the in-progress
+      (Section 6) Transfer that is cancelled, encoded as a 24-bit
+      unsigned integer in network byte order.
 
-   The Transfer Cancel Message has no additional content, and hence has
-   a fixed length of 4 octets.
+   MBZ:  "Must Be Zero".  One octet with no semantic meaning.  A sender
+      SHOULD set this field value to zero (0).  A receiver MUST ignore
+      this value.
+
+   The Transfer Cancel Message has no content, and hence has a fixed
+   length of 4 octets.
 
    A peer that receives a Transfer Cancel Message with a Transfer Number
-   field value that does not match the numeric identifier of an active
-   (Section 4.2) Transfer MUST ignore the Message.
+   field value that does not match the numeric identifier of an
+   in-progress (Section 6) Transfer MUST ignore the Message.
 
-6.6.  Definite Padding Message
+7.7.  Definite Padding Message
 
    The Definite Padding Message is used to add padding to a Link-layer
    PDU.
@@ -540,7 +630,7 @@ Table of Contents
    value of zero (0), adding a total of four (4) octets of padding to
    the Link-layer PDU.
 
-6.7.  Indefinite Padding Message
+7.8.  Indefinite Padding Message
 
    An Indefinite Padding Message has a type of zero (0), and in order to
    support padding with a minimum total length of one octet, the Message
@@ -563,7 +653,7 @@ Table of Contents
    octet, the non-zero octet is the first octet of the subsequent
    Message.
 
-7.  Security Considerations
+8.  Security Considerations
 
    This protocol does not define any measures to protect Messages or
    their content.  Although there may be link-layer mechanisms to
@@ -573,7 +663,7 @@ Table of Contents
    be used to provide integrity and protection at the Bundle layer as
    required.
 
-8.  Deployment Considerations
+9.  Deployment Considerations
 
    The following caveats should be considered before deploying instances
    of this protocol:
@@ -599,24 +689,34 @@ Table of Contents
        control-plane protocol, or some other mechanism beyond the scope
        of this specification.
 
-9.  IANA Considerations
+10.  IANA Considerations
 
    TODO Need a new registry!
 
    TODO Reserve some codepoints for CLs
 
-10.  References
+11.  References
 
-10.1.  Normative References
+11.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/rfc/rfc2119>.
 
+   [RFC6363]  Watson, M., Begen, A., and V. Roca, "Forward Error
+              Correction (FEC) Framework", RFC 6363,
+              DOI 10.17487/RFC6363, October 2011,
+              <https://www.rfc-editor.org/rfc/rfc6363>.
+
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC8681]  Roca, V. and B. Teibi, "Sliding Window Random Linear Code
+              (RLC) Forward Erasure Correction (FEC) Schemes for
+              FECFRAME", RFC 8681, DOI 10.17487/RFC8681, January 2020,
+              <https://www.rfc-editor.org/rfc/rfc8681>.
 
    [RFC9171]  Burleigh, S., Fall, K., and E. Birrane, III, "Bundle
               Protocol Version 7", RFC 9171, DOI 10.17487/RFC9171,
@@ -626,16 +726,41 @@ Table of Contents
               Security (BPSec)", RFC 9172, DOI 10.17487/RFC9172, January
               2022, <https://www.rfc-editor.org/rfc/rfc9172>.
 
-10.2.  Informative References
+11.2.  Informative References
+
+   [AOS]      "Advanced Orbiting Systems (AOS) Space Data Link
+              Protocol", CCSDS 732.0-B-4, October 2021,
+              <<https://public.ccsds.org/Pubs/132x0b3.pdf>>.
+
+   [DVB-S2X]  "Digital Video Broadcasting (DVB); Second generation
+              framing structure, channel coding and modulation systems
+              for Broadcasting, Interactive Services, News Gathering and
+              other broadband satellite applications; Part 2: DVB-S2
+              Extensions (DVB-S2X)", ETSI EN 302 307-2, August 2024,
+              <<https://www.etsi.org/deliver/
+              etsi_en/302300_302399/30230702/01.04.01_60/
+              en_30230702v010401p.pdf>>.
+
+   [IEEE.802.3]
+              "IEEE Standard for Ethernet", IEEE,
+              DOI 10.1109/ieeestd.2022.9844436, ISBN ["9781504487252"],
+              July 2022, <https://doi.org/10.1109/ieeestd.2022.9844436>.
 
    [RFC5050]  Scott, K. and S. Burleigh, "Bundle Protocol
               Specification", RFC 5050, DOI 10.17487/RFC5050, November
               2007, <https://www.rfc-editor.org/rfc/rfc5050>.
 
-   [RFC6363]  Watson, M., Begen, A., and V. Roca, "Forward Error
-              Correction (FEC) Framework", RFC 6363,
-              DOI 10.17487/RFC6363, October 2011,
-              <https://www.rfc-editor.org/rfc/rfc6363>.
+   [TM]       "Telemetry (TM) Space Data Link Protocol",
+              CCSDS 132.0-B-3, October 2021,
+              <<https://public.ccsds.org/Pubs/132x0b3.pdf>>.
+
+   [USLP]     "Unified Space Data Link Protocol (USLP)",
+              CCSDS 732.1-B-3, June 2024,
+              <<https://public.ccsds.org/Pubs/732x1b3e1.pdf>>.
+
+   [_5G]      3GPP and C. Devaki, "System architecture for the 5G System
+              (5GS)", 21 December 2022, <https://www.3gpp.org/ftp/Specs/
+              archive/23_series/23.501/23501-i00.zip>.
 
 Appendix A.  Examples
 
@@ -675,7 +800,32 @@ A.1.  Segmentation of a sequence of Bundles of equal priority
 
 A.2.  Segmentation of a sequence of Bundles of different priority
 
-   DIAGRAM!
+   An example of the transmission of three Bundles of varying sizes and
+   different priority in three Link-layer PDUs is shown in Figure 3.
+
+          +---------------------------+
+          | Bundle B                  |  Priority 0
+          +---------------------------+
+  +--------------+-----------------+
+  | Bundle A     | Bundle C        |     Priority 1
+  +--------------+-----------------+
+
+
+  +----------------------+------------+----+----+------------+---------+
+  | T1    | Transfer 2   | Transfer 2 | T1 | T3 | Transfer 3 | Padding |
+  | S0    | Segment 0    | Segment 1  | S1 | S0 | Segment 1  |         |
+  +----------------------+------------+----+----+------------+---------+
+
+  :                      :                      :                      :
+
+  +----------------------+----------------------+----------------------+
+  | Link-layer PDU N     | Link-layer PDU N + 1 | Link-layer PDU N + 2 |
+  +----------------------+----------------------+----------------------+
+
+      Figure 3: Interleaved segmentation of a sequence of Bundles of
+                            different priority
+
+   TODO: Description.
 
 A.3.  Message repetition
 
