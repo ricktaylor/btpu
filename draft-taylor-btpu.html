@@ -9,14 +9,14 @@
 <meta content="
        TODO - I always do the abstract last ;) 
     " name="description">
-<meta content="xml2rfc 3.26.0" name="generator">
+<meta content="xml2rfc 3.27.0" name="generator">
 <meta content="DTN" name="keyword">
 <meta content="BPv7" name="keyword">
 <meta content="Bundle Protocol" name="keyword">
 <meta content="draft-taylor-btpu-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.26.0
-    Python 3.12.8
+  xml2rfc 3.27.0
+    Python 3.12.9
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
@@ -437,7 +437,7 @@ dl {
     margin-bottom: 0;
   }
 }
-dl > dt {
+dl:not(.dlNewline) > dt {
   float: left;
   margin-right: 2ch;
   min-width: 8ch;
@@ -1050,7 +1050,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Taylor</td>
-<td class="center">Expires 7 August 2025</td>
+<td class="center">Expires 25 August 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-taylor-btpu-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-02-03" class="published">3 February 2025</time>
+<time datetime="2025-02-21" class="published">21 February 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-08-07">7 August 2025</time></dd>
+<dd class="expires"><time datetime="2025-08-25">25 August 2025</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1102,7 +1102,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1168,18 +1168,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-handling-link-layer-pdu-los" class="internal xref">Handling Link-layer PDU Loss</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
-                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-message-repetition" class="internal xref">Message Repetition</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
-                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-forward-error-correction" class="internal xref">Forward Error Correction</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-transfer-window" class="internal xref">Transfer Window</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-transfer-window" class="internal xref">Transfer Window</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-handling-link-layer-pdu-los" class="internal xref">Handling Link-layer PDU Loss</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-message-definitions" class="internal xref">Message Definitions</a></p>
@@ -1191,19 +1183,16 @@ svg :is([fill="white"], [fill^="#fff"]) {
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-transfer-segment-message" class="internal xref">Transfer Segment Message</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-transfer-repair-message" class="internal xref">Transfer Repair Message</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-transfer-end-message" class="internal xref">Transfer End Message</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
-                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-transfer-end-message" class="internal xref">Transfer End Message</a></p>
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-transfer-cancel-message" class="internal xref">Transfer Cancel Message</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.5">
-                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-transfer-cancel-message" class="internal xref">Transfer Cancel Message</a></p>
+                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-definite-padding-message" class="internal xref">Definite Padding Message</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.6">
-                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-definite-padding-message" class="internal xref">Definite Padding Message</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.7">
-                <p id="section-toc.1-1.7.2.7.1"><a href="#section-7.7" class="auto internal xref">7.7</a>.  <a href="#name-indefinite-padding-message" class="internal xref">Indefinite Padding Message</a></p>
+                <p id="section-toc.1-1.7.2.6.1"><a href="#section-7.6" class="auto internal xref">7.6</a>.  <a href="#name-indefinite-padding-message" class="internal xref">Indefinite Padding Message</a></p>
 </li>
             </ul>
 </li>
@@ -1237,7 +1226,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
                 <p id="section-toc.1-1.12.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-segmentation-of-a-sequence-of" class="internal xref">Segmentation of a sequence of Bundles of different priority</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
-                <p id="section-toc.1-1.12.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-message-repetition-2" class="internal xref">Message repetition</a></p>
+                <p id="section-toc.1-1.12.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-message-repetition" class="internal xref">Message repetition</a></p>
 </li>
             </ul>
 </li>
@@ -1260,16 +1249,16 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <p id="section-1-2">In the realm of near- and deep-space communication there are a number of standardized link-layer protocols, including <span>[<a href="#USLP" class="cite xref">USLP</a>]</span>, <span>[<a href="#TM" class="cite xref">TM</a>]</span>, <span>[<a href="#AOS" class="cite xref">AOS</a>]</span>, <span>[<a href="#DVB-S2X" class="cite xref">DVB-S2X</a>]</span>, that share a set of common properties:<a href="#section-1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1-3.1">
-          <p id="section-1-3.1.1">They are unidirectional. Data transfer occurs in one direction only, there is no in-band return path for data.<a href="#section-1-3.1.1" class="pilcrow">¶</a></p>
+          <p id="section-1-3.1.1">They are unidirectional: data transfer occurs in one direction only, there is no in-band return path for data.<a href="#section-1-3.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-1-3.2">
-          <p id="section-1-3.2.1">They are frame-based. The link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.<a href="#section-1-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-1-3.2.1">They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.<a href="#section-1-3.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-1-3.3">
-          <p id="section-1-3.3.1">They are point-to-point. Although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.<a href="#section-1-3.3.1" class="pilcrow">¶</a></p>
+          <p id="section-1-3.3.1">They are point-to-point: although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.<a href="#section-1-3.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-1-4">These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-4">These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <p id="section-1-5">Although primarily designed for space communication, the protocol is applicable to other link-layer technologies which can share these characteristics, for example 5G Unstructured PDUs <span>[<a href="#_5G" class="cite xref">_5G</a>]</span>, or <span>[<a href="#IEEE.802.3" class="cite xref">IEEE.802.3</a>]</span>, without requiring a full IP stack.<a href="#section-1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1324,7 +1313,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-protocol-overview">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-protocol-overview" class="section-name selfRef">Protocol Overview</a>
       </h2>
-<p id="section-3-1">The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is likely to not be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in <a href="#transfers" class="auto internal xref">Section 4</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-1">The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is unlikely to be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in <a href="#transfers" class="auto internal xref">Section 4</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">This segmentation is unrelated to BPv7 bundle fragmentation as defined in <span><a href="https://rfc-editor.org/rfc/rfc9171#section-5.8" class="relref">Section 5.8</a> of [<a href="#RFC9171" class="cite xref">RFC9171</a>]</span>.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.<a href="#section-3-2" class="pilcrow">¶</a></p>
 <p id="section-3-3">As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see <a href="#interleaving-transfers" class="auto internal xref">Section 4.1</a> for more detail.<a href="#section-3-3" class="pilcrow">¶</a></p>
 <div id="applicability">
@@ -1369,7 +1358,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-padding">
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-padding" class="section-name selfRef">Padding</a>
         </h3>
-<p id="section-3.3-1">Because the size of a Bundle is not expected to exactly match the size of a Link-layer PDU, an implementation will likely need to add padding to the PDU so that the Link-layer PDU size requirements are met.  Two Messages are available for this purpose: The <span><a href="#definite-padding-message" class="internal xref">Definite Padding Message</a> (<a href="#definite-padding-message" class="auto internal xref">Section 7.6</a>)</span> and the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.7</a>)</span>.  Padding Messages are valid at any point within a Link-layer PDU.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-1">Because the size of a Bundle is not expected to exactly match the size of a Link-layer PDU, an implementation will likely need to add padding to the PDU so that the Link-layer PDU size requirements are met.  Two Messages are available for this purpose: The <span><a href="#definite-padding-message" class="internal xref">Definite Padding Message</a> (<a href="#definite-padding-message" class="auto internal xref">Section 7.5</a>)</span> and the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.6</a>)</span>.  Padding Messages are valid at any point within a Link-layer PDU.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
 <p id="section-3.3-2">It is <span class="bcp14">RECOMMENDED</span> that implementations use the Definite Padding Message to add padding to a Link-layer PDU, except when less than four octets of padding are required, as the minimum length of the Definite Padding Message is four octets.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3">When the link-layer protocol provides variable length Link-layer PDUs, implementations <span class="bcp14">SHOULD</span> take into account the mechanisms used by the link-layer protocol to support variable length Link-layer PDUs, and emit Link-layer PDUs of a suitable size for the underlying protocol. For example, if variable length Link-layer PDUs are implemented by the link-layer protocol using a sub-framing mechanism, then emitting Link-layer PDUs of a single, or whole number of sub-frames may increase reliability.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <p id="section-3.3-4">The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is an implementation matter.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
@@ -1384,9 +1373,9 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       </h2>
 <p id="section-4-1">As described in the <span><a href="#protocol-overview" class="internal xref">Protocol Overview</a> (<a href="#protocol-overview" class="auto internal xref">Section 3</a>)</span>, in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, if a complete Bundle can fit in the next Link-layer PDU, then the Bundle <span class="bcp14">SHOULD</span> be transferred without segmentation, see the <span><a href="#bundle-message" class="internal xref">Bundle Message</a> (<a href="#bundle-message" class="auto internal xref">Section 7.1</a>)</span>.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">Each Segment is assigned a monotonically increasing integral sequence number, starting at zero (0).  In addition to a sequence number, every Segment is associated with a Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.<a href="#section-4-2" class="pilcrow">¶</a></p>
-<p id="section-4-3">The transfer of a sequence of Segments of a Bundle a sender <span class="bcp14">MUST</span> be emitted via a sequence of <span><a href="#transfer-segment-message" class="internal xref">Transfer Segment Messages</a> (<a href="#transfer-segment-message" class="auto internal xref">Section 7.2</a>)</span> carrying the same Transfer identifier.  The end of a sequence of Segments <span class="bcp14">MUST</span> be indicated by emitting a <span><a href="#transfer-end-message" class="internal xref">Transfer End Message</a> (<a href="#transfer-end-message" class="auto internal xref">Section 7.4</a>)</span>, including the final Segment and the identifier of the Transfer that is now complete.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-3">The transfer of a sequence of Segments of a Bundle a sender <span class="bcp14">MUST</span> be emitted via a sequence of <span><a href="#transfer-segment-message" class="internal xref">Transfer Segment Messages</a> (<a href="#transfer-segment-message" class="auto internal xref">Section 7.2</a>)</span> carrying the same Transfer identifier.  The end of a sequence of Segments <span class="bcp14">MUST</span> be indicated by emitting a <span><a href="#transfer-end-message" class="internal xref">Transfer End Message</a> (<a href="#transfer-end-message" class="auto internal xref">Section 7.3</a>)</span>, including the final Segment and the identifier of the Transfer that is now complete.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the order of their sequence number.  When all the Segments have been received and concatenated, the receiver is assumed to pass the recombined Bundle to an upper layer for further processing.<a href="#section-4-4" class="pilcrow">¶</a></p>
-<p id="section-4-5">Transfer numbers are encoded using 24-bit unsigned integers. A sending implementation <span class="bcp14">SHOULD</span> choose a random value between 0 and 2^24-1 for the first Transfer number, and each subsequent Transfer <span class="bcp14">MUST</span> use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^24.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-5">Transfer numbers are encoded using 32-bit unsigned integers. A sending implementation <span class="bcp14">SHOULD</span> choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer <span class="bcp14">MUST</span> use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.<a href="#section-4-5" class="pilcrow">¶</a></p>
 <div id="interleaving-transfers">
 <section id="section-4.1">
         <h3 id="name-interleaving-transfers">
@@ -1400,80 +1389,56 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-cancelling-transfers">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-cancelling-transfers" class="section-name selfRef">Cancelling Transfers</a>
         </h3>
-<p id="section-4.2-1">A Transfer may be aborted by the sender while a Transfer is in progress by the emitting of a <span><a href="#transfer-cancel-message" class="internal xref">Transfer Cancel Message</a> (<a href="#transfer-cancel-message" class="auto internal xref">Section 7.5</a>)</span> containing the identifier of the Transfer to cancel.  The receiver of a Transfer Cancel Message <span class="bcp14">SHOULD</span> discard any cached segments already received and <span class="bcp14">MUST</span> ignore any further Messages associated with the Transfer.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-</section>
-</div>
-</section>
-</div>
-<div id="handling-loss">
-<section id="section-5">
-      <h2 id="name-handling-link-layer-pdu-los">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-handling-link-layer-pdu-los" class="section-name selfRef">Handling Link-layer PDU Loss</a>
-      </h2>
-<p id="section-5-1">Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be unexpectedly lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Bundle segments, and provides a mechanism for the reconstruction of lost Messages through the use of forward error correction.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">The provided protection mechanisms are logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate transmission frame, it <span class="bcp14">SHOULD</span> be delivered to this protocol only once.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<div id="repetition">
-<section id="section-5.1">
-        <h3 id="name-message-repetition">
-<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-message-repetition" class="section-name selfRef">Message Repetition</a>
-        </h3>
-<p id="section-5.1-1">As a simple protection against loss, a sender <span class="bcp14">MAY</span> emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted may contain different Messages, any repeated Message <span class="bcp14">MUST</span> be an exact copy of an already emitted Message.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers may repeat Messages differently.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1-2">Although it is <span class="bcp14">RECOMMENDED</span> that <span><a href="#transfer-segment-message" class="internal xref">Transfer Segment Messages</a> (<a href="#transfer-segment-message" class="auto internal xref">Section 7.2</a>)</span> are emitted in ascending order of sequence number, once emitted, any Message <span class="bcp14">MAY</span> be repeated in any order.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
-<p id="section-5.1-3">The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:<a href="#section-5.1-3" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-5.1-4.1">
-            <p id="section-5.1-4.1.1">Offline analysis of the deployed environment may require a certain amount of Message repetition to reach some required certainty of transfer.<a href="#section-5.1-4.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-5.1-4.2">
-            <p id="section-5.1-4.2.1">A higher 'reliability' factor associated with a particular Bundle may result in more copies of each Transfer Message being emitted.<a href="#section-5.1-4.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-5.1-4.3">
-            <p id="section-5.1-4.3.1">Signalling from the link-layer protocol, or some other out-of-band mechanism, may trigger increased repetition of a subset Messages, to protect against some temporary spike in Link-layer PDU loss rate.<a href="#section-5.1-4.3.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-</section>
-</div>
-<div id="fec">
-<section id="section-5.2">
-        <h3 id="name-forward-error-correction">
-<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-forward-error-correction" class="section-name selfRef">Forward Error Correction</a>
-        </h3>
-<p id="section-5.2-1">TODO: This protocol uses the framework defined in <span>[<a href="#RFC8681" class="cite xref">RFC8681</a>]</span> for Forward Error Correction.   Configuration is performed out-of-band.  FEC Instance ID is carried in Transfer Messages, and <span class="bcp14">MUST</span> be pre-agreed.  FEC Instance ID 0 means "No FEC".<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">A Transfer may be aborted by the sender while a Transfer is in progress by the emitting of a <span><a href="#transfer-cancel-message" class="internal xref">Transfer Cancel Message</a> (<a href="#transfer-cancel-message" class="auto internal xref">Section 7.4</a>)</span> containing the identifier of the Transfer to cancel.  The receiver of a Transfer Cancel Message <span class="bcp14">SHOULD</span> discard any cached segments already received and <span class="bcp14">MUST</span> ignore any further Messages associated with the Transfer.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
 <div id="transfer-window">
-<section id="section-6">
+<section id="section-5">
       <h2 id="name-transfer-window">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-transfer-window" class="section-name selfRef">Transfer Window</a>
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-transfer-window" class="section-name selfRef">Transfer Window</a>
       </h2>
-<p id="section-6-1">Because Messages may be lost in transmission due to the loss of Link-layer PDUs, and a sender may emit duplicate Messages as a defense against loss, see <a href="#repetition" class="auto internal xref">Section 5.1</a>, a sender <span class="bcp14">MUST</span> maintain a sliding Transfer Window that defines the maximum number of Transfers that can be simultaneously in progress.  As Transfers are identified by a monotonically increasing number, the size of the Transfer Window also strictly defines the range of identifiers of Transfers in progress.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">The sender <span class="bcp14">MUST</span> maintain a reference to the greatest Transfer number used in any emitted Message, and <span class="bcp14">MUST NOT</span> emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^24 roll-over.<a href="#section-6-2" class="pilcrow">¶</a></p>
-<p id="section-6-3">The receiver <span class="bcp14">MUST</span> maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window <span class="bcp14">MUST</span> be considered <a href="#cancelled" class="auto internal xref">Section 4.2</a>.  Because of Transfer number roll-over, half the number space of 2^24 is used to determine if a number is older or newer than the latest Transfer number.  The pseudocode for the algorithm, taking roll-over into account is give in <a href="#fig-windowing" class="auto internal xref">Figure 2</a>.<a href="#section-6-3" class="pilcrow">¶</a></p>
-<p id="section-6-4">The size of the Transfer Window <span class="bcp14">SHOULD</span> be the same at both receiver and sender, and <span class="bcp14">MUST</span> be configured via some out-of-band mechanism.  The Transfer Window size <span class="bcp14">MUST</span> be at least 4, and is <span class="bcp14">RECOMMENDED</span> to be 16. <span class="cref" id="_1">These are entirely arbitrary numbers, and need checking by the WG.</span><a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-5-1">Because Messages may be lost in transmission due to the loss of Link-layer PDUs, and a sender may emit duplicate Messages as a defense against loss, see <a href="#repetition" class="auto internal xref">Section 6</a>, a sender <span class="bcp14">MUST</span> maintain a sliding Transfer Window that defines the maximum number of Transfers that can be simultaneously in progress.  As Transfers are identified by a monotonically increasing number, the size of the Transfer Window also strictly defines the range of identifiers of Transfers in progress.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">The sender <span class="bcp14">MUST</span> maintain a reference to the greatest Transfer number used in any emitted Message, and <span class="bcp14">MUST NOT</span> emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">The receiver <span class="bcp14">MUST</span> maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window <span class="bcp14">MUST</span> be considered <a href="#cancelled" class="auto internal xref">Section 4.2</a>.  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number.  Pseudocode for the algorithm is given in <a href="#fig-windowing" class="auto internal xref">Figure 2</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-4">The size of the Transfer Window <span class="bcp14">SHOULD</span> be the same at both receiver and sender, and <span class="bcp14">MUST</span> be configured via some out-of-band mechanism.  The Transfer Window size <span class="bcp14">MUST</span> be at least 4, <span class="bcp14">MUST</span> be less than 2^12, and is <span class="bcp14">RECOMMENDED</span> to be 16. <span class="cref" id="_1">These are entirely arbitrary numbers, and need discussing by the WG.</span><a href="#section-5-4" class="pilcrow">¶</a></p>
 <span id="name-the-receivers-algorithm-for"></span><div id="fig-windowing">
 <figure id="figure-2">
-        <div class="alignLeft art-pseudocode art-text artwork" id="section-6-5.1">
+        <div class="alignLeft art-pseudocode art-text artwork" id="section-5-5.1">
 <pre>
-const WINDOW_SIZE  # The configured transfer window size
-var GREATEST       # Greatest received transfer number, initially NIL
+const WINDOW_SIZE  # Configured transfer window size
+var GREATEST = NIL # Greatest received transfer number, initially NIL
 
+# Function to check if a transfer is valid within the current window
 FUNCTION isTransferValid(T):
-    RETURN ((GREATEST - T + 2^24) MOD 2^24) &lt; WINDOW_SIZE
+    # Ensure Transfer T is within the
+    #  sliding window defined by WINDOW_SIZE
+    RETURN ((GREATEST - T + 2^32) MOD 2^32) &lt; WINDOW_SIZE
 
+# Function to check if the transfer is considered a "new" transfer
 FUNCTION isNewTransfer(T):
-    RETURN ((T - GREATEST + 2^24) MOD 2^24) &lt; (2^24 / 2)
+    IF GREATEST IS NIL THEN
+        # The first transfer is always considered new
+        RETURN TRUE
+    # Check if the transfer is within the valid window range
+    #  (half of the number space + window size)
+    RETURN ((T - GREATEST + 2^32) MOD 2^32) &lt;
+                     (2^32 / 2) + (WINDOW_SIZE / 2)
 
+# Main function to process a transfer and manage the sliding window
 FUNCTION processTransfer(T):
     IF isNewTransfer(T) THEN
-        # Transfer T is a new Transfer
-        GREATEST ← T  # Update GREATEST
-        # Cancel transfers now outside the window
+        # New transfer, update the greatest received transfer number
+        GREATEST ← T
+        # Cancel transfers that are now outside the window
+        CANCEL_OUTDATED_TRANSFERS()
     ELSE IF isTransferValid(T) THEN
-        # Transfer T is already in progress
+        # Transfer is in progress, continue handling it
+        CONTINUE_PROCESSING(T)
     ELSE
-        # Transfer T is invalid, ignore Message
+        # Transfer is invalid (outside the window), ignore it
+        IGNORE_MESSAGE(T)
 </pre>
 </div>
 <figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
@@ -1482,12 +1447,34 @@ FUNCTION processTransfer(T):
 </div>
 </section>
 </div>
+<div id="repetition">
+<section id="section-6">
+      <h2 id="name-handling-link-layer-pdu-los">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-handling-link-layer-pdu-los" class="section-name selfRef">Handling Link-layer PDU Loss</a>
+      </h2>
+<p id="section-6-1">Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Messages.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">A sender <span class="bcp14">MAY</span> emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted may contain different Messages, any repeated Message <span class="bcp14">MUST</span> be an exact copy of an already emitted Message.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers may repeat Messages differently.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Although it is <span class="bcp14">RECOMMENDED</span> that <span><a href="#transfer-segment-message" class="internal xref">Transfer Segment Messages</a> (<a href="#transfer-segment-message" class="auto internal xref">Section 7.2</a>)</span> are emitted in ascending order of sequence number; once emitted, any Message <span class="bcp14">MAY</span> be repeated any number of times, in any order.  The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:<a href="#section-6-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.1">
+          <p id="section-6-4.1.1">Offline analysis of the deployed environment may require a certain amount of Message repetition to reach some required certainty of transfer.<a href="#section-6-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.2">
+          <p id="section-6-4.2.1">A higher 'reliability' factor associated with a particular Bundle may result in more copies of each associated Transfer Message being emitted.<a href="#section-6-4.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.3">
+          <p id="section-6-4.3.1">Signalling from the link-layer protocol, or some other out-of-band mechanism, may trigger increased repetition of a subset Messages, to protect against some temporary spike in Link-layer PDU loss rate.<a href="#section-6-4.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-6-5">The provided protection mechanisms are logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate transmission frame, it <span class="bcp14">SHOULD</span> be delivered to this protocol only once.<a href="#section-6-5" class="pilcrow">¶</a></p>
+</section>
+</div>
 <div id="message-definitions">
 <section id="section-7">
       <h2 id="name-message-definitions">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-message-definitions" class="section-name selfRef">Message Definitions</a>
       </h2>
-<p id="section-7-1">All protocol Messages except the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.7</a>)</span> follow the common "Type-Length-Value" formatting pattern, with each Message being identified by a four octet header that encodes the type of the Message, and the length of the content of the Message.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">All protocol Messages except the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.6</a>)</span> follow the common "Type-Length-Value" formatting pattern, with each Message being identified by a four octet header that encodes the type of the Message, and the length of the content of the Message.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7-2">
 <pre>
  0                   1                   2                   3
@@ -1502,7 +1489,7 @@ FUNCTION processTransfer(T):
 <span class="break"></span><dl class="dlParallel" id="section-7-3">
         <dt id="section-7-3.1">Type:</dt>
         <dd style="margin-left: 1.5em" id="section-7-3.2">
-          <p id="section-7-3.2.1">The type of the Message, allocated from IANA "BTP-U Message Types" registry, expressed as a 8-bit unsigned integer in network byte order.<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-7-3.2.1">The type of the Message, allocated from IANA "BTP-U Message Types" registry, see <a href="#iana-considerations" class="auto internal xref">Section 10</a>, expressed as a 8-bit unsigned integer in network byte order.<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-7-3.3">Length:</dt>
@@ -1522,7 +1509,7 @@ FUNCTION processTransfer(T):
 <a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-bundle-message" class="section-name selfRef">Bundle Message</a>
         </h3>
 <p id="section-7.1-1">The Bundle Message is used to encapsulate an entire Bundle, and <span class="bcp14">SHOULD</span> be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
-<p id="section-7.1-2">A Bundle Message has a type of TBD. The Message Content <span class="bcp14">MUST</span> be a valid Bundle.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">A Bundle Message has a type of 2. The Message Content <span class="bcp14">MUST</span> be a valid Bundle.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
 <p id="section-7.1-3">Emitting a Bundle Message with a Length field value of zero (0), i.e no Bundle content, only adds control-plane overhead and <span class="bcp14">SHOULD NOT</span> be used as an alternative form of padding.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1532,13 +1519,13 @@ FUNCTION processTransfer(T):
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-transfer-segment-message" class="section-name selfRef">Transfer Segment Message</a>
         </h3>
 <p id="section-7.2-1">The Transfer Segment Message is used to encapsulate a segment of a multi-segment Bundle Transfer.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.2-2">A Transfer Segment Message has a type of TBD. The Message Content field is formatted as follows:<a href="#section-7.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.2-2">A Transfer Segment Message has a type of 3. The Message Content field is formatted as follows:<a href="#section-7.2-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.2-3">
 <pre>
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Transfer Number                               | FEC ID        |
+| Transfer Number                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | Segment Sequence Number                                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1549,190 +1536,123 @@ FUNCTION processTransfer(T):
 <span class="break"></span><dl class="dlParallel" id="section-7.2-4">
           <dt id="section-7.2-4.1">Transfer Number:</dt>
           <dd style="margin-left: 1.5em" id="section-7.2-4.2">
-            <p id="section-7.2-4.2.1">The numeric identifier of the Transfer that this Segment is part of, encoded as a 24-bit unsigned integer in network byte order.<a href="#section-7.2-4.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.2-4.2.1">The numeric identifier of the Transfer that this Segment is part of, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.2-4.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-7.2-4.3">FEC ID:</dt>
+<dt id="section-7.2-4.3">Segment Sequence Number:</dt>
           <dd style="margin-left: 1.5em" id="section-7.2-4.4">
-            <p id="section-7.2-4.4.1">The FEC Instance ID, see <span><a href="#fec" class="internal xref">Forward Error Correction</a> (<a href="#fec" class="auto internal xref">Section 5.2</a>)</span>.<a href="#section-7.2-4.4.1" class="pilcrow">¶</a></p>
+            <p id="section-7.2-4.4.1">The sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.2-4.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-7.2-4.5">Segment Sequence Number:</dt>
+<dt id="section-7.2-4.5">Segment Data:</dt>
           <dd style="margin-left: 1.5em" id="section-7.2-4.6">
-            <p id="section-7.2-4.6.1">The sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.2-4.6.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.2-4.7">Segment Data:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.2-4.8">
-            <p id="section-7.2-4.8.1">The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number, FEC Instance, and Segment Sequence Number.<a href="#section-7.2-4.8.1" class="pilcrow">¶</a></p>
+            <p id="section-7.2-4.6.1">The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.<a href="#section-7.2-4.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
 <p id="section-7.2-5">Transfer Segment Messages <span class="bcp14">SHOULD NOT</span> have zero octets of Segment Data, i.e. the total length of the Message <span class="bcp14">SHOULD</span> be greater than 12 octets.  Such Messages only add control-plane overhead and <span class="bcp14">SHOULD NOT</span> be used as an alternative form of padding.<a href="#section-7.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="transfer-repair-message">
+<div id="transfer-end-message">
 <section id="section-7.3">
-        <h3 id="name-transfer-repair-message">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-transfer-repair-message" class="section-name selfRef">Transfer Repair Message</a>
+        <h3 id="name-transfer-end-message">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-transfer-end-message" class="section-name selfRef">Transfer End Message</a>
         </h3>
-<p id="section-7.3-1">The Transfer Repair Message is used to carry repair information when Forward Error Correction is in use, see <a href="#fec" class="auto internal xref">Section 5.2</a>.  This message corresponds to the "Repair Packet" in <span><a href="https://rfc-editor.org/rfc/rfc6363#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC6363" class="cite xref">RFC6363</a>]</span>.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
-<p id="section-7.3-2">A Transfer Repair Message has a type of TBD. The Message Content field is formatted as follows:<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<p id="section-7.3-1">The Transfer End Message is used to encapsulate the last segment of a multi-segment Bundle Transfer, and complete the Transfer.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-2">A Transfer End Message has a type of 4. The Message Content field is formatted as follows:<a href="#section-7.3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.3-3">
 <pre>
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Transfer Number                               | FEC ID        |
+| Transfer Number                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | Segment Sequence Number                                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Segment Data Length                                           |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                 ... Segment Repair Data ...                   :
+|                    ... Segment Data ...                       :
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre><a href="#section-7.3-3" class="pilcrow">¶</a>
 </div>
 <span class="break"></span><dl class="dlParallel" id="section-7.3-4">
           <dt id="section-7.3-4.1">Transfer Number:</dt>
           <dd style="margin-left: 1.5em" id="section-7.3-4.2">
-            <p id="section-7.3-4.2.1">The numeric identifier of the <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 6</a>)</span> Transfer that this Segment is part of, encoded as a 24-bit unsigned integer in network byte order.<a href="#section-7.3-4.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.3-4.2.1">The numeric identifier of the <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 5</a>)</span> Transfer that is completing, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.3-4.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-7.3-4.3">FEC ID:</dt>
+<dt id="section-7.3-4.3">Segment Sequence Number:</dt>
           <dd style="margin-left: 1.5em" id="section-7.3-4.4">
-            <p id="section-7.3-4.4.1">The FEC Instance ID, see <span><a href="#fec" class="internal xref">Forward Error Correction</a> (<a href="#fec" class="auto internal xref">Section 5.2</a>)</span>.<a href="#section-7.3-4.4.1" class="pilcrow">¶</a></p>
+            <p id="section-7.3-4.4.1">The non-zero sequence number of the final Segment, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.3-4.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-7.3-4.5">Segment Sequence Number:</dt>
+<dt id="section-7.3-4.5">Segment Data:</dt>
           <dd style="margin-left: 1.5em" id="section-7.3-4.6">
-            <p id="section-7.3-4.6.1">The non-zero sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.3-4.6.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.3-4.7">Segment Data Length:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.3-4.8">
-            <p id="section-7.3-4.8.1">The length of the Segment data to be repaired, corresponding to the "Source Packet" in <span><a href="https://rfc-editor.org/rfc/rfc6363#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC6363" class="cite xref">RFC6363</a>]</span>.<a href="#section-7.3-4.8.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.3-4.9">Segment Repair Data:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.3-4.10">
-            <p id="section-7.3-4.10.1">The octets of the repair data for a Segment of the Transfer, with the length calculated as the Message content length excluding the 12 octets of the Transfer Number, FEC Instance, Segment Sequence Number, and Segment Data Length.<a href="#section-7.3-4.10.1" class="pilcrow">¶</a></p>
+            <p id="section-7.3-4.6.1">The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.<a href="#section-7.3-4.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-7.3-5">Transfer Repair Messages <span class="bcp14">SHOULD NOT</span> have zero octets of Segment Repair Data, i.e. the total length of the Message <span class="bcp14">SHOULD</span> be greater than 16 octets.  Such Messages only add control-plane overhead and <span class="bcp14">SHOULD NOT</span> be used as an alternative form of padding.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
+<p id="section-7.3-5">Transfer End Messages <span class="bcp14">SHOULD NOT</span> have zero octets of Segment Data, i.e. the total length of the Message <span class="bcp14">SHOULD</span> be greater than 12 octets.  Such Messages only add control-plane overhead and <span class="bcp14">SHOULD NOT</span> be used as an alternative form of padding.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="transfer-end-message">
+<div id="transfer-cancel-message">
 <section id="section-7.4">
-        <h3 id="name-transfer-end-message">
-<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-transfer-end-message" class="section-name selfRef">Transfer End Message</a>
+        <h3 id="name-transfer-cancel-message">
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-transfer-cancel-message" class="section-name selfRef">Transfer Cancel Message</a>
         </h3>
-<p id="section-7.4-1">The Transfer End Message is used to encapsulate the last segment of a multi-segment Bundle Transfer, and complete the Transfer.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
-<p id="section-7.4-2">A Transfer End Message has a type of TBD. The Message Content field is formatted as follows:<a href="#section-7.4-2" class="pilcrow">¶</a></p>
+<p id="section-7.4-1">The Transfer Cancel Message is used to indicate that the indicated Transfer is being aborted, and any prior or later received Segments associated with the Transfer <span class="bcp14">MUST</span> be discarded by the receiver.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+<p id="section-7.4-2">A Transfer Cancel Message has a type of 5. The Message Content field is formatted as follows:<a href="#section-7.4-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.4-3">
 <pre>
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Transfer Number                               | FEC ID        |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Segment Sequence Number                                       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                    ... Segment Data ...                       :
+| Transfer Number                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre><a href="#section-7.4-3" class="pilcrow">¶</a>
 </div>
 <span class="break"></span><dl class="dlParallel" id="section-7.4-4">
           <dt id="section-7.4-4.1">Transfer Number:</dt>
           <dd style="margin-left: 1.5em" id="section-7.4-4.2">
-            <p id="section-7.4-4.2.1">The numeric identifier of the <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 6</a>)</span> Transfer that is completing, encoded as a 24-bit unsigned integer in network byte order.<a href="#section-7.4-4.2.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.4-4.3">FEC ID:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.4-4.4">
-            <p id="section-7.4-4.4.1">The FEC Instance ID, see <span><a href="#fec" class="internal xref">Forward Error Correction</a> (<a href="#fec" class="auto internal xref">Section 5.2</a>)</span>.<a href="#section-7.4-4.4.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.4-4.5">Segment Sequence Number:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.4-4.6">
-            <p id="section-7.4-4.6.1">The non-zero sequence number of the final Segment, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.4-4.6.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.4-4.7">Segment Data:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.4-4.8">
-            <p id="section-7.4-4.8.1">The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number, FEC Instance, and Segment Sequence Number.<a href="#section-7.4-4.8.1" class="pilcrow">¶</a></p>
+            <p id="section-7.4-4.2.1">The numeric identifier of the <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 5</a>)</span> Transfer that is cancelled, encoded as a 32-bit unsigned integer in network byte order.<a href="#section-7.4-4.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-7.4-5">Transfer End Messages <span class="bcp14">SHOULD NOT</span> have zero octets of Segment Data, i.e. the total length of the Message <span class="bcp14">SHOULD</span> be greater than 12 octets.  Such Messages only add control-plane overhead and <span class="bcp14">SHOULD NOT</span> be used as an alternative form of padding.<a href="#section-7.4-5" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="transfer-cancel-message">
-<section id="section-7.5">
-        <h3 id="name-transfer-cancel-message">
-<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-transfer-cancel-message" class="section-name selfRef">Transfer Cancel Message</a>
-        </h3>
-<p id="section-7.5-1">The Transfer Cancel Message is used to indicate that the indicated Transfer is being aborted, and any prior or later received Segments associated with the Transfer <span class="bcp14">MUST</span> be discarded by the receiver.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
-<p id="section-7.5-2">A Transfer Cancel Message has a type of TBD. The Message Content field is formatted as follows:<a href="#section-7.5-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.5-3">
-<pre>
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Transfer Number                               | MBZ           |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</pre><a href="#section-7.5-3" class="pilcrow">¶</a>
-</div>
-<span class="break"></span><dl class="dlParallel" id="section-7.5-4">
-          <dt id="section-7.5-4.1">Transfer Number:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.5-4.2">
-            <p id="section-7.5-4.2.1">The numeric identifier of the <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 6</a>)</span> Transfer that is cancelled, encoded as a 24-bit unsigned integer in network byte order.<a href="#section-7.5-4.2.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-7.5-4.3">MBZ:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.5-4.4">
-            <p id="section-7.5-4.4.1">"Must Be Zero". One octet with no semantic meaning.  A sender <span class="bcp14">SHOULD</span> set this field value to zero (0).  A receiver <span class="bcp14">MUST</span> ignore this value.<a href="#section-7.5-4.4.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-</dl>
-<p id="section-7.5-5">The Transfer Cancel Message has no content, and hence has a fixed length of 4 octets.<a href="#section-7.5-5" class="pilcrow">¶</a></p>
-<p id="section-7.5-6">A peer that receives a Transfer Cancel Message with a Transfer Number field value that does not match the numeric identifier of an <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 6</a>)</span> Transfer <span class="bcp14">MUST</span> ignore the Message.<a href="#section-7.5-6" class="pilcrow">¶</a></p>
+<p id="section-7.4-5">The Transfer Cancel Message has no content, and hence has a fixed length of 4 octets.<a href="#section-7.4-5" class="pilcrow">¶</a></p>
+<p id="section-7.4-6">A peer that receives a Transfer Cancel Message with a Transfer Number field value that does not match the numeric identifier of an <span><a href="#transfer-window" class="internal xref">in-progress</a> (<a href="#transfer-window" class="auto internal xref">Section 5</a>)</span> Transfer <span class="bcp14">MUST</span> ignore the Message.<a href="#section-7.4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="definite-padding-message">
-<section id="section-7.6">
+<section id="section-7.5">
         <h3 id="name-definite-padding-message">
-<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-definite-padding-message" class="section-name selfRef">Definite Padding Message</a>
+<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-definite-padding-message" class="section-name selfRef">Definite Padding Message</a>
         </h3>
-<p id="section-7.6-1">The Definite Padding Message is used to add padding to a Link-layer PDU.<a href="#section-7.6-1" class="pilcrow">¶</a></p>
-<p id="section-7.6-2">A Definite Padding Message has a type of TBD. Any content it contains has no semantic meaning, and a sender <span class="bcp14">SHOULD</span> set the content to a sequence of zero (0) octets.  A receiver <span class="bcp14">MUST</span> ignore any Message content.<a href="#section-7.6-2" class="pilcrow">¶</a></p>
-<p id="section-7.6-3">It is valid for this Message to have no content, i.e. a Length field value of zero (0), adding a total of four (4) octets of padding to the Link-layer PDU.<a href="#section-7.6-3" class="pilcrow">¶</a></p>
+<p id="section-7.5-1">The Definite Padding Message is used to add padding to a Link-layer PDU.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
+<p id="section-7.5-2">A Definite Padding Message has a type of 1. Any content it contains has no semantic meaning, and a sender <span class="bcp14">SHOULD</span> set the content to a sequence of zero (0) octets.  A receiver <span class="bcp14">MUST</span> ignore any Message content.<a href="#section-7.5-2" class="pilcrow">¶</a></p>
+<p id="section-7.5-3">It is valid for this Message to have no content, i.e. a Length field value of zero (0), adding a total of four (4) octets of padding to the Link-layer PDU.<a href="#section-7.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="indefinite-padding-message">
-<section id="section-7.7">
+<section id="section-7.6">
         <h3 id="name-indefinite-padding-message">
-<a href="#section-7.7" class="section-number selfRef">7.7. </a><a href="#name-indefinite-padding-message" class="section-name selfRef">Indefinite Padding Message</a>
+<a href="#section-7.6" class="section-number selfRef">7.6. </a><a href="#name-indefinite-padding-message" class="section-name selfRef">Indefinite Padding Message</a>
         </h3>
-<p id="section-7.7-1">An Indefinite Padding Message has a type of zero (0), and in order to support padding with a minimum total length of one octet, the Message does not include an explicit Length or Content field, and hence has the following layout:<a href="#section-7.7-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.7-2">
+<p id="section-7.6-1">An Indefinite Padding Message has a type of zero (0), and in order to support padding with a minimum total length of one octet, the Message does not include an explicit Length or Content field, and hence has the following layout:<a href="#section-7.6-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7.6-2">
 <pre>
  0 1 2 3 4 5 6 7
 +-+-+-+-+-+-+-+-+
 | Type          |
 +-+-+-+-+-+-+-+-+
-</pre><a href="#section-7.7-2" class="pilcrow">¶</a>
+</pre><a href="#section-7.6-2" class="pilcrow">¶</a>
 </div>
-<span class="break"></span><dl class="dlParallel" id="section-7.7-3">
-          <dt id="section-7.7-3.1">Type:</dt>
-          <dd style="margin-left: 1.5em" id="section-7.7-3.2">
-            <p id="section-7.7-3.2.1">The type of the Message: zero (0).<a href="#section-7.7-3.2.1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.6-3">
+          <dt id="section-7.6-3.1">Type:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.6-3.2">
+            <p id="section-7.6-3.2.1">The type of the Message: zero (0).<a href="#section-7.6-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-7.7-4">The Indefinite Padding Message type field is followed by a sequence of zero or more zero (0) octets, ending at the first non-zero octet, or the end of the fixed-length Link-layer PDU.  The content of the Message has no meaning, and <span class="bcp14">MUST</span> be ignored by a receiver.<a href="#section-7.7-4" class="pilcrow">¶</a></p>
-<p id="section-7.7-5">Note: When a Indefinite Padding Message terminates with a non-zero octet, the non-zero octet is the first octet of the subsequent Message.<a href="#section-7.7-5" class="pilcrow">¶</a></p>
+<p id="section-7.6-4">The Indefinite Padding Message type field is followed by a sequence of zero or more zero (0) octets, ending at the first non-zero octet, or the end of the fixed-length Link-layer PDU.  The content of the Message has no meaning, and <span class="bcp14">MUST</span> be ignored by a receiver.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
+<p id="section-7.6-5">Note: When a Indefinite Padding Message terminates with a non-zero octet, the non-zero octet is the first octet of the subsequent Message.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1769,8 +1689,95 @@ FUNCTION processTransfer(T):
       <h2 id="name-iana-considerations">
 <a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-10-1">TODO Need a new registry!<a href="#section-10-1" class="pilcrow">¶</a></p>
-<p id="section-10-2">TODO Reserve some codepoints for CLs<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-1">IANA is requested to create a new registry entitled "BTP-U Message Types".  The registration policy for this registry, using terms defined in <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>, is:<a href="#section-10-1" class="pilcrow">¶</a></p>
+<span id="name-btp-u-message-types-registr"></span><div id="tab-message-types-reg">
+<table class="left" id="table-1">
+        <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-btp-u-message-types-registr" class="selfRef">BTP-U Message Types registration policies</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-center" rowspan="1" colspan="1">Values</th>
+            <th class="text-left" rowspan="1" colspan="1">Registration Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">0..0x6F</td>
+            <td class="text-left" rowspan="1" colspan="1">Standards Action</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">0x70..0x7F</td>
+            <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">0x80..0xFF</td>
+            <td class="text-left" rowspan="1" colspan="1">Reserved for future expansion</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<p id="section-10-3">The initial values for the registry are:<a href="#section-10-3" class="pilcrow">¶</a></p>
+<span id="name-btp-u-message-types-initial"></span><div id="tab-message-types-vals">
+<table class="left" id="table-2">
+        <caption>
+<a href="#table-2" class="selfRef">Table 2</a>:
+<a href="#name-btp-u-message-types-initial" class="selfRef">BTP-U Message Types initial values</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-center" rowspan="1" colspan="1">Type</th>
+            <th class="text-left" rowspan="1" colspan="1">Message</th>
+            <th class="text-left" rowspan="1" colspan="1">Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">0</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.6</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">1</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#definite-padding-message" class="internal xref">Definite Padding Message</a> (<a href="#definite-padding-message" class="auto internal xref">Section 7.5</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">2</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#bundle-message" class="internal xref">Bundle Message</a> (<a href="#bundle-message" class="auto internal xref">Section 7.1</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">3</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#transfer-segment-message" class="internal xref">Transfer Segment Message</a> (<a href="#transfer-segment-message" class="auto internal xref">Section 7.2</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">4</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#transfer-end-message" class="internal xref">Transfer End Message</a> (<a href="#transfer-end-message" class="auto internal xref">Section 7.3</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+          <tr>
+            <td class="text-center" rowspan="1" colspan="1">5</td>
+            <td class="text-left" rowspan="1" colspan="1">
+              <span><a href="#transfer-cancel-message" class="internal xref">Transfer Cancel Message</a> (<a href="#transfer-cancel-message" class="auto internal xref">Section 7.4</a>)</span>
+</td>
+            <td class="text-left" rowspan="1" colspan="1">This document</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
 </section>
 </div>
 <div id="sec-combined-references">
@@ -1788,17 +1795,13 @@ FUNCTION processTransfer(T):
         <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="RFC6363">[RFC6363]</dt>
+<dt id="RFC8126">[RFC8126]</dt>
         <dd>
-<span class="refAuthor">Watson, M.</span>, <span class="refAuthor">Begen, A.</span>, and <span class="refAuthor">V. Roca</span>, <span class="refTitle">"Forward Error Correction (FEC) Framework"</span>, <span class="seriesInfo">RFC 6363</span>, <span class="seriesInfo">DOI 10.17487/RFC6363</span>, <time datetime="2011-10" class="refDate">October 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6363">https://www.rfc-editor.org/rfc/rfc6363</a>&gt;</span>. </dd>
+<span class="refAuthor">Cotton, M.</span>, <span class="refAuthor">Leiba, B.</span>, and <span class="refAuthor">T. Narten</span>, <span class="refTitle">"Guidelines for Writing an IANA Considerations Section in RFCs"</span>, <span class="seriesInfo">BCP 26</span>, <span class="seriesInfo">RFC 8126</span>, <span class="seriesInfo">DOI 10.17487/RFC8126</span>, <time datetime="2017-06" class="refDate">June 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8126">https://www.rfc-editor.org/rfc/rfc8126</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
         <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC8681">[RFC8681]</dt>
-        <dd>
-<span class="refAuthor">Roca, V.</span> and <span class="refAuthor">B. Teibi</span>, <span class="refTitle">"Sliding Window Random Linear Code (RLC) Forward Erasure Correction (FEC) Schemes for FECFRAME"</span>, <span class="seriesInfo">RFC 8681</span>, <span class="seriesInfo">DOI 10.17487/RFC8681</span>, <time datetime="2020-01" class="refDate">January 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8681">https://www.rfc-editor.org/rfc/rfc8681</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9171">[RFC9171]</dt>
         <dd>
@@ -1929,8 +1932,8 @@ FUNCTION processTransfer(T):
 </div>
 <div id="message-repetition">
 <section id="appendix-A.3">
-        <h3 id="name-message-repetition-2">
-<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-message-repetition-2" class="section-name selfRef">Message repetition</a>
+        <h3 id="name-message-repetition">
+<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-message-repetition" class="section-name selfRef">Message repetition</a>
         </h3>
 <p id="appendix-A.3-1">DIAGRAM!<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
 </section>
@@ -1943,7 +1946,8 @@ FUNCTION processTransfer(T):
 <a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
 <p id="appendix-B-1">EK, Brian Sipos, TCPCL authors<a href="#appendix-B-1" class="pilcrow">¶</a></p>
-<p id="appendix-B-2">TODO acknowledge.<a href="#appendix-B-2" class="pilcrow">¶</a></p>
+<p id="appendix-B-2">Chloe<a href="#appendix-B-2" class="pilcrow">¶</a></p>
+<p id="appendix-B-3">TODO acknowledge.<a href="#appendix-B-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
