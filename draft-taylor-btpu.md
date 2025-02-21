@@ -38,7 +38,6 @@ author:
   email: <rtaylor@aalyria.com>
 
 normative:
-  RFC6363:
 
 informative:
   USLP:
@@ -86,11 +85,11 @@ Bundle Protocol version 7 (BPv7) is defined in terms a layered logical architect
 
 In the realm of near- and deep-space communication there are a number of standardized link-layer protocols, including {{USLP}}, {{TM}}, {{AOS}}, {{DVB-S2X}}, that share a set of common properties:
 
-- They are unidirectional. Data transfer occurs in one direction only, there is no in-band return path for data.
-- They are frame-based. The link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.
-- They are point-to-point. Although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
+- They are unidirectional: data transfer occurs in one direction only, there is no in-band return path for data.
+- They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.
+- They are point-to-point: although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
 
-These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.
+These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.
 
 Although primarily designed for space communication, the protocol is applicable to other link-layer technologies which can share these characteristics, for example 5G Unstructured PDUs {{5G}}, or {{IEEE.802.3}}, without requiring a full IP stack.
 
@@ -119,7 +118,7 @@ Segment:
 
 # Protocol Overview
 
-The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is likely to not be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in [](#transfers).
+The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is unlikely to be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in [](#transfers).
 
 This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
@@ -168,7 +167,7 @@ The transfer of a sequence of Segments of a Bundle a sender MUST be emitted via 
 
 The receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the order of their sequence number.  When all the Segments have been received and concatenated, the receiver is assumed to pass the recombined Bundle to an upper layer for further processing.
 
-Transfer numbers are encoded using 24-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^24-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^24.
+Transfer numbers are encoded using 32-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
 ## Interleaving Transfers
 
@@ -178,59 +177,65 @@ In order to support the transmission of Bundles with different priorities, Trans
 
 A Transfer may be aborted by the sender while a Transfer is in progress by the emitting of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  The receiver of a Transfer Cancel Message SHOULD discard any cached segments already received and MUST ignore any further Messages associated with the Transfer.
 
-# Handling Link-layer PDU Loss {#handling-loss}
-
-Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be unexpectedly lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Bundle segments, and provides a mechanism for the reconstruction of lost Messages through the use of forward error correction.
-
-The provided protection mechanisms are logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate transmission frame, it SHOULD be delivered to this protocol only once.
-
-## Message Repetition {#repetition}
-
-As a simple protection against loss, a sender MAY emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted may contain different Messages, any repeated Message MUST be an exact copy of an already emitted Message.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers may repeat Messages differently.
-
-Although it is RECOMMENDED that [Transfer Segment Messages](#transfer-segment-message) are emitted in ascending order of sequence number, once emitted, any Message MAY be repeated in any order.
-
-The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:
-
-- Offline analysis of the deployed environment may require a certain amount of Message repetition to reach some required certainty of transfer.
-- A higher 'reliability' factor associated with a particular Bundle may result in more copies of each Transfer Message being emitted.
-- Signalling from the link-layer protocol, or some other out-of-band mechanism, may trigger increased repetition of a subset Messages, to protect against some temporary spike in Link-layer PDU loss rate.
-
-## Forward Error Correction {#fec}
-
-TODO: This protocol uses the framework defined in {{!RFC8681}} for Forward Error Correction.   Configuration is performed out-of-band.  FEC Instance ID is carried in Transfer Messages, and MUST be pre-agreed.  FEC Instance ID 0 means "No FEC".
-
 # Transfer Window {#transfer-window}
 
 Because Messages may be lost in transmission due to the loss of Link-layer PDUs, and a sender may emit duplicate Messages as a defense against loss, see [](#repetition), a sender MUST maintain a sliding Transfer Window that defines the maximum number of Transfers that can be simultaneously in progress.  As Transfers are identified by a monotonically increasing number, the size of the Transfer Window also strictly defines the range of identifiers of Transfers in progress.
 
-The sender MUST maintain a reference to the greatest Transfer number used in any emitted Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^24 roll-over.
+The sender MUST maintain a reference to the greatest Transfer number used in any emitted Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
-The receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelled).  Because of Transfer number roll-over, half the number space of 2^24 is used to determine if a number is older or newer than the latest Transfer number.  The pseudocode for the algorithm, taking roll-over into account is give in [](#fig-windowing).
+The receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelled).  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
-The size of the Transfer Window SHOULD be the same at both receiver and sender, and MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, and is RECOMMENDED to be 16. [^1]
+The size of the Transfer Window SHOULD be the same at both receiver and sender, and MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
-    const WINDOW_SIZE  # The configured transfer window size
-    var GREATEST       # Greatest received transfer number, initially NIL
+    const WINDOW_SIZE  # Configured transfer window size
+    var GREATEST = NIL # Greatest received transfer number, initially NIL
 
+    # Function to check if a transfer is valid within the current window
     FUNCTION isTransferValid(T):
-        RETURN ((GREATEST - T + 2^24) MOD 2^24) < WINDOW_SIZE
+        # Ensure Transfer T is within the
+        #  sliding window defined by WINDOW_SIZE
+        RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
 
+    # Function to check if the transfer is considered a "new" transfer
     FUNCTION isNewTransfer(T):
-        RETURN ((T - GREATEST + 2^24) MOD 2^24) < (2^24 / 2)
+        IF GREATEST IS NIL THEN
+            # The first transfer is always considered new
+            RETURN TRUE
+        # Check if the transfer is within the valid window range
+        #  (half of the number space + window size)
+        RETURN ((T - GREATEST + 2^32) MOD 2^32) <
+                         (2^32 / 2) + (WINDOW_SIZE / 2)
 
+    # Main function to process a transfer and manage the sliding window
     FUNCTION processTransfer(T):
         IF isNewTransfer(T) THEN
-            # Transfer T is a new Transfer
-            GREATEST ← T  # Update GREATEST
-            # Cancel transfers now outside the window
+            # New transfer, update the greatest received transfer number
+            GREATEST ← T
+            # Cancel transfers that are now outside the window
+            CANCEL_OUTDATED_TRANSFERS()
         ELSE IF isTransferValid(T) THEN
-            # Transfer T is already in progress
+            # Transfer is in progress, continue handling it
+            CONTINUE_PROCESSING(T)
         ELSE
-            # Transfer T is invalid, ignore Message
+            # Transfer is invalid (outside the window), ignore it
+            IGNORE_MESSAGE(T)
 {: #fig-windowing title="The receiver's algorithm for determining Transfer number validity and sliding window" artwork-type="pseudocode"  }
 
-[^1]: These are entirely arbitrary numbers, and need checking by the WG.
+[^1]: These are entirely arbitrary numbers, and need discussing by the WG.
+
+# Handling Link-layer PDU Loss {#repetition}
+
+Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Messages.
+
+A sender MAY emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted may contain different Messages, any repeated Message MUST be an exact copy of an already emitted Message.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers may repeat Messages differently.
+
+Although it is RECOMMENDED that [Transfer Segment Messages](#transfer-segment-message) are emitted in ascending order of sequence number; once emitted, any Message MAY be repeated any number of times, in any order.  The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:
+
+- Offline analysis of the deployed environment may require a certain amount of Message repetition to reach some required certainty of transfer.
+- A higher 'reliability' factor associated with a particular Bundle may result in more copies of each associated Transfer Message being emitted.
+- Signalling from the link-layer protocol, or some other out-of-band mechanism, may trigger increased repetition of a subset Messages, to protect against some temporary spike in Link-layer PDU loss rate.
+
+The provided protection mechanisms are logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate transmission frame, it SHOULD be delivered to this protocol only once.
 
 # Message Definitions
 
@@ -245,7 +250,7 @@ All protocol Messages except the [Indefinite Padding Message](#indefinite-paddin
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Type:
-: The type of the Message, allocated from IANA "BTP-U Message Types" registry, expressed as a 8-bit unsigned integer in network byte order.
+: The type of the Message, allocated from IANA "BTP-U Message Types" registry, see [](#iana-considerations), expressed as a 8-bit unsigned integer in network byte order.
 
 Length:
 : The length of the Message in octets, excluding the 4 octets of the header itself, expressed as a 24-bit unsigned integer in network byte order.
@@ -257,7 +262,7 @@ Content:
 
 The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.
 
-A Bundle Message has a type of TBD. The Message Content MUST be a valid Bundle.
+A Bundle Message has a type of 2. The Message Content MUST be a valid Bundle.
 
 Emitting a Bundle Message with a Length field value of zero (0), i.e no Bundle content, only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
@@ -265,12 +270,12 @@ Emitting a Bundle Message with a Length field value of zero (0), i.e no Bundle c
 
 The Transfer Segment Message is used to encapsulate a segment of a multi-segment Bundle Transfer.
 
-A Transfer Segment Message has a type of TBD. The Message Content field is formatted as follows:
+A Transfer Segment Message has a type of 3. The Message Content field is formatted as follows:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Transfer Number                               | FEC ID        |
+    | Transfer Number                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     | Segment Sequence Number                                       |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -278,64 +283,26 @@ A Transfer Segment Message has a type of TBD. The Message Content field is forma
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the Transfer that this Segment is part of, encoded as a 24-bit unsigned integer in network byte order.
-
-FEC ID:
-: The FEC Instance ID, see [Forward Error Correction](#fec).
+: The numeric identifier of the Transfer that this Segment is part of, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Sequence Number:
 : The sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Data:
-: The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number, FEC Instance, and Segment Sequence Number.
+: The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.
 
 Transfer Segment Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
-
-## Transfer Repair Message
-
-The Transfer Repair Message is used to carry repair information when Forward Error Correction is in use, see [](#fec).  This message corresponds to the "Repair Packet" in {{Section 5.1 of RFC6363}}.
-
-A Transfer Repair Message has a type of TBD. The Message Content field is formatted as follows:
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Transfer Number                               | FEC ID        |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Segment Sequence Number                                       |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Segment Data Length                                           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                 ... Segment Repair Data ...                   :
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Transfer Number:
-: The numeric identifier of the [in-progress](#transfer-window) Transfer that this Segment is part of, encoded as a 24-bit unsigned integer in network byte order.
-
-FEC ID:
-: The FEC Instance ID, see [Forward Error Correction](#fec).
-
-Segment Sequence Number:
-: The non-zero sequence number of the Segment, encoded as a 32-bit unsigned integer in network byte order.
-
-Segment Data Length:
-: The length of the Segment data to be repaired, corresponding to the "Source Packet" in {{Section 5.1 of RFC6363}}.
-
-Segment Repair Data:
-: The octets of the repair data for a Segment of the Transfer, with the length calculated as the Message content length excluding the 12 octets of the Transfer Number, FEC Instance, Segment Sequence Number, and Segment Data Length.
-
-Transfer Repair Messages SHOULD NOT have zero octets of Segment Repair Data, i.e. the total length of the Message SHOULD be greater than 16 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer End Message
 
 The Transfer End Message is used to encapsulate the last segment of a multi-segment Bundle Transfer, and complete the Transfer.
 
-A Transfer End Message has a type of TBD. The Message Content field is formatted as follows:
+A Transfer End Message has a type of 4. The Message Content field is formatted as follows:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Transfer Number                               | FEC ID        |
+    | Transfer Number                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     | Segment Sequence Number                                       |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -343,16 +310,13 @@ A Transfer End Message has a type of TBD. The Message Content field is formatted
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the [in-progress](#transfer-window) Transfer that is completing, encoded as a 24-bit unsigned integer in network byte order.
-
-FEC ID:
-: The FEC Instance ID, see [Forward Error Correction](#fec).
+: The numeric identifier of the [in-progress](#transfer-window) Transfer that is completing, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Sequence Number:
 : The non-zero sequence number of the final Segment, encoded as a 32-bit unsigned integer in network byte order.
 
 Segment Data:
-: The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number, FEC Instance, and Segment Sequence Number.
+: The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Sequence Number.
 
 Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
@@ -360,19 +324,16 @@ Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the tota
 
 The Transfer Cancel Message is used to indicate that the indicated Transfer is being aborted, and any prior or later received Segments associated with the Transfer MUST be discarded by the receiver.
 
-A Transfer Cancel Message has a type of TBD. The Message Content field is formatted as follows:
+A Transfer Cancel Message has a type of 5. The Message Content field is formatted as follows:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Transfer Number                               | MBZ           |
+    | Transfer Number                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Transfer Number:
-: The numeric identifier of the [in-progress](#transfer-window) Transfer that is cancelled, encoded as a 24-bit unsigned integer in network byte order.
-
-MBZ:
-: "Must Be Zero". One octet with no semantic meaning.  A sender SHOULD set this field value to zero (0).  A receiver MUST ignore this value.
+: The numeric identifier of the [in-progress](#transfer-window) Transfer that is cancelled, encoded as a 32-bit unsigned integer in network byte order.
 
 The Transfer Cancel Message has no content, and hence has a fixed length of 4 octets.
 
@@ -382,7 +343,7 @@ A peer that receives a Transfer Cancel Message with a Transfer Number field valu
 
 The Definite Padding Message is used to add padding to a Link-layer PDU.
 
-A Definite Padding Message has a type of TBD. Any content it contains has no semantic meaning, and a sender SHOULD set the content to a sequence of zero (0) octets.  A receiver MUST ignore any Message content.
+A Definite Padding Message has a type of 1. Any content it contains has no semantic meaning, and a sender SHOULD set the content to a sequence of zero (0) octets.  A receiver MUST ignore any Message content.
 
 It is valid for this Message to have no content, i.e. a Length field value of zero (0), adding a total of four (4) octets of padding to the Link-layer PDU.
 
@@ -418,9 +379,26 @@ The following caveats should be considered before deploying instances of this pr
 
 # IANA Considerations
 
-TODO Need a new registry!
+IANA is requested to create a new registry entitled "BTP-U Message Types".  The registration policy for this registry, using terms defined in {{!RFC8126}}, is:
 
-TODO Reserve some codepoints for CLs
+| Values | Registration Policy |
+|:-----: |:------ |
+| 0..0x6F | Standards Action |
+| 0x70..0x7F | Private Use |
+| 0x80..0xFF | Reserved for future expansion |
+{: #tab-message-types-reg align="left" title="BTP-U Message Types registration policies"}
+
+The initial values for the registry are:
+
+| Type | Message | Reference |
+|:------:|:-----|:------|
+| 0 | [Indefinite Padding Message](#indefinite-padding-message)  | This document |
+| 1 | [Definite Padding Message](#definite-padding-message)  | This document |
+| 2 | [Bundle Message](#bundle-message) | This document |
+| 3 | [Transfer Segment Message](#transfer-segment-message) | This document |
+| 4 | [Transfer End Message](#transfer-end-message) | This document |
+| 5 | [Transfer Cancel Message](#transfer-cancel-message) | This document |
+{: #tab-message-types-vals align="left" title="BTP-U Message Types initial values"}
 
 --- back
 
@@ -483,5 +461,7 @@ DIAGRAM!
 # Acknowledgments
 
 EK, Brian Sipos, TCPCL authors
+
+Chloe
 
 TODO acknowledge.
