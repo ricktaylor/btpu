@@ -713,16 +713,16 @@ Table of Contents
 
    [AOS]      "Advanced Orbiting Systems (AOS) Space Data Link
               Protocol", CCSDS 732.0-B-4, October 2021,
-              <<https://public.ccsds.org/Pubs/132x0b3.pdf>>.
+              <https://public.ccsds.org/Pubs/132x0b3.pdf>.
 
    [DVB-S2X]  "Digital Video Broadcasting (DVB); Second generation
               framing structure, channel coding and modulation systems
               for Broadcasting, Interactive Services, News Gathering and
               other broadband satellite applications; Part 2: DVB-S2
               Extensions (DVB-S2X)", ETSI EN 302 307-2, August 2024,
-              <<https://www.etsi.org/deliver/
+              <https://www.etsi.org/deliver/
               etsi_en/302300_302399/30230702/01.04.01_60/
-              en_30230702v010401p.pdf>>.
+              en_30230702v010401p.pdf>.
 
    [IEEE.802.3]
               "IEEE Standard for Ethernet", IEEE,
@@ -735,11 +735,11 @@ Table of Contents
 
    [TM]       "Telemetry (TM) Space Data Link Protocol",
               CCSDS 132.0-B-3, October 2021,
-              <<https://public.ccsds.org/Pubs/132x0b3.pdf>>.
+              <https://public.ccsds.org/Pubs/132x0b3.pdf>.
 
    [USLP]     "Unified Space Data Link Protocol (USLP)",
               CCSDS 732.1-B-3, June 2024,
-              <<https://public.ccsds.org/Pubs/732x1b3e1.pdf>>.
+              <https://public.ccsds.org/Pubs/732x1b3e1.pdf>.
 
    [_5G]      3GPP and C. Devaki, "System architecture for the 5G System
               (5GS)", 21 December 2022, <https://www.3gpp.org/ftp/Specs/
@@ -825,4 +825,4 @@ Author's Address
 
    Rick Taylor
    Aalyria Technologies
-   Email: <rtaylor@aalyria.com>
+   Email: rtaylor@aalyria.com
