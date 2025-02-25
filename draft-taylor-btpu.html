@@ -7,7 +7,9 @@
 <title>Bundle Transfer Protocol - Unidirectional</title>
 <meta content="Rick Taylor" name="author">
 <meta content="
-       TODO - I always do the abstract last ;) 
+       This document defines a protocol for the unidirectional transfer of large binary objects, typically Bundle Protocol version 7 bundles, between two nodes connected by a unidirectional, unreliable, frame-based link-layer protocol, without requiring IP services. 
+       The protocol does not require a return path for acknowledgements, but instead supports data repetition as a mechanism to protect against data loss.  It fully supports the disaggregation of flows of bundles of different priority, preventing head-of-line blocking impacting performance. 
+       The binary wire format of the protocol is designed to enable performant implementation in hardware or software, with the aim of enabling protocol implementations to run at the line-rate of the underlying link-layer protocol. 
     " name="description">
 <meta content="xml2rfc 3.27.0" name="generator">
 <meta content="DTN" name="keyword">
@@ -1045,12 +1047,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">BTP-U</td>
+<td class="center">BTPU</td>
 <td class="right">February 2025</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Taylor</td>
-<td class="center">Expires 25 August 2025</td>
+<td class="center">Expires 29 August 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1065,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-taylor-btpu-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-02-21" class="published">21 February 2025</time>
+<time datetime="2025-02-25" class="published">25 February 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-08-25">25 August 2025</time></dd>
+<dd class="expires"><time datetime="2025-08-29">29 August 2025</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1081,7 +1083,9 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">Bundle Transfer Protocol - Unidirectional</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">TODO - I always do the abstract last ;)<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines a protocol for the unidirectional transfer of large binary objects, typically Bundle Protocol version 7 bundles, between two nodes connected by a unidirectional, unreliable, frame-based link-layer protocol, without requiring IP services.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">The protocol does not require a return path for acknowledgements, but instead supports data repetition as a mechanism to protect against data loss.  It fully supports the disaggregation of flows of bundles of different priority, preventing head-of-line blocking impacting performance.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+<p id="section-abstract-3">The binary wire format of the protocol is designed to enable performant implementation in hardware or software, with the aim of enabling protocol implementations to run at the line-rate of the underlying link-layer protocol.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1102,7 +1106,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 25 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 29 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1146,13 +1150,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-protocol-overview" class="internal xref">Protocol Overview</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-applicability" class="internal xref">Applicability</a></p>
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-messages" class="internal xref">Messages</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-messages" class="internal xref">Messages</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
-                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-padding" class="internal xref">Padding</a></p>
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-padding" class="internal xref">Padding</a></p>
 </li>
             </ul>
 </li>
@@ -1258,8 +1259,28 @@ svg :is([fill="white"], [fill^="#fff"]) {
           <p id="section-1-3.3.1">They are point-to-point: although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.<a href="#section-1-3.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-1-4">These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.<a href="#section-1-4" class="pilcrow">¶</a></p>
-<p id="section-1-5">Although primarily designed for space communication, the protocol is applicable to other link-layer technologies which can share these characteristics, for example 5G Unstructured PDUs <span>[<a href="#_5G" class="cite xref">_5G</a>]</span>, or <span>[<a href="#IEEE.802.3" class="cite xref">IEEE.802.3</a>]</span>, without requiring a full IP stack.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-4">These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.  The protocol is applicable to other link-layer technologies which share these characteristics beyond those commonly used for space communication, for example 5G Unstructured PDUs <span>[<a href="#_5G" class="cite xref">_5G</a>]</span>, or <span>[<a href="#IEEE.802.3" class="cite xref">IEEE.802.3</a>]</span>, without requiring underlying IP services.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">The driving use-case of the protocol has been the transfer of BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 (<span>[<a href="#RFC5050" class="cite xref">RFC5050</a>]</span>) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.  Additionally, the segmentation mechanism enables the use of this protocol with Bundle formats that do not support some form of fragmentation.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">Although designed for any link-layer protocol that shares the characteristics defined in <a href="#introduction" class="auto internal xref">Section 1</a>, additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.<a href="#section-1-6" class="pilcrow">¶</a></p>
+<span id="name-the-location-of-btpu-in-rel"></span><div id="fig-stack">
+<figure id="figure-1">
+        <div class="alignCenter art-text artwork" id="section-1-7.1">
+<pre>
++----------------------+
+|  DTN Application     |
++----------------------+
+|  BPv7 / BPv6         |
++----------------------+
+|  BTPU               |
++----------------------+
+|  Link-layer Protocol |
++----------------------+
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-the-location-of-btpu-in-rel" class="selfRef">The location of BTPU in relation to the Bundle Protocol and a Link-layer protocol</a>
+        </figcaption></figure>
+</div>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1316,52 +1337,24 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <p id="section-3-1">The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is unlikely to be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in <a href="#transfers" class="auto internal xref">Section 4</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">This segmentation is unrelated to BPv7 bundle fragmentation as defined in <span><a href="https://rfc-editor.org/rfc/rfc9171#section-5.8" class="relref">Section 5.8</a> of [<a href="#RFC9171" class="cite xref">RFC9171</a>]</span>.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.<a href="#section-3-2" class="pilcrow">¶</a></p>
 <p id="section-3-3">As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see <a href="#interleaving-transfers" class="auto internal xref">Section 4.1</a> for more detail.<a href="#section-3-3" class="pilcrow">¶</a></p>
-<div id="applicability">
-<section id="section-3.1">
-        <h3 id="name-applicability">
-<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-applicability" class="section-name selfRef">Applicability</a>
-        </h3>
-<p id="section-3.1-1">The protocol has been designed to transfer BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 (<span>[<a href="#RFC5050" class="cite xref">RFC5050</a>]</span>) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.  Additionally, the segmentation mechanism enables the use of this protocol with Bundle formats that do not support some form of fragmentation.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1-2">Although designed for any link-layer protocol that shares the characteristics defined in <a href="#introduction" class="auto internal xref">Section 1</a>, additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
-<span id="name-the-location-of-btp-u-in-re"></span><div id="fig-stack">
-<figure id="figure-1">
-          <div class="alignCenter art-text artwork" id="section-3.1-3.1">
-<pre>
-+----------------------+
-|  DTN Application     |
-+----------------------+
-|  BPv7 / BPv6         |
-+----------------------+
-|  BTP-U               |
-+----------------------+
-|  Link-layer Protocol |
-+----------------------+
-</pre>
-</div>
-<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
-<a href="#name-the-location-of-btp-u-in-re" class="selfRef">The location of BTP-U in relation to the Bundle Protocol and a Link-layer protocol</a>
-          </figcaption></figure>
-</div>
-</section>
-</div>
 <div id="messages">
-<section id="section-3.2">
+<section id="section-3.1">
         <h3 id="name-messages">
-<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-messages" class="section-name selfRef">Messages</a>
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-messages" class="section-name selfRef">Messages</a>
         </h3>
-<p id="section-3.2-1">The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The sender is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages from sender to receiver is the logical control-plane used by the protocol.  This document uses the verb "emit" to describe to the writing of a new Message to a Link-layer PDU ready for transmission, to differentiate from the the transmission of the Link-layer PDU itself, as many Messages may emitted prior to the transmission of the containing PDU.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">See <a href="#message-definitions" class="auto internal xref">Section 7</a> for detail of each type of Message.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-1">The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The sender is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages from sender to receiver is the logical control-plane used by the protocol.  This document uses the verb "emit" to describe to the writing of a new Message to a Link-layer PDU ready for transmission, to differentiate from the the transmission of the Link-layer PDU itself, as many Messages may emitted prior to the transmission of the containing PDU.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">See <a href="#message-definitions" class="auto internal xref">Section 7</a> for detail of each type of Message.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="padding">
-<section id="section-3.3">
+<section id="section-3.2">
         <h3 id="name-padding">
-<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-padding" class="section-name selfRef">Padding</a>
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-padding" class="section-name selfRef">Padding</a>
         </h3>
-<p id="section-3.3-1">Because the size of a Bundle is not expected to exactly match the size of a Link-layer PDU, an implementation will likely need to add padding to the PDU so that the Link-layer PDU size requirements are met.  Two Messages are available for this purpose: The <span><a href="#definite-padding-message" class="internal xref">Definite Padding Message</a> (<a href="#definite-padding-message" class="auto internal xref">Section 7.5</a>)</span> and the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.6</a>)</span>.  Padding Messages are valid at any point within a Link-layer PDU.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.3-2">It is <span class="bcp14">RECOMMENDED</span> that implementations use the Definite Padding Message to add padding to a Link-layer PDU, except when less than four octets of padding are required, as the minimum length of the Definite Padding Message is four octets.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
-<p id="section-3.3-3">When the link-layer protocol provides variable length Link-layer PDUs, implementations <span class="bcp14">SHOULD</span> take into account the mechanisms used by the link-layer protocol to support variable length Link-layer PDUs, and emit Link-layer PDUs of a suitable size for the underlying protocol. For example, if variable length Link-layer PDUs are implemented by the link-layer protocol using a sub-framing mechanism, then emitting Link-layer PDUs of a single, or whole number of sub-frames may increase reliability.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
-<p id="section-3.3-4">The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is an implementation matter.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+<p id="section-3.2-1">Because the size of a Bundle is not expected to exactly match the size of a Link-layer PDU, an implementation will likely need to add padding to the PDU so that the Link-layer PDU size requirements are met.  Two Messages are available for this purpose: The <span><a href="#definite-padding-message" class="internal xref">Definite Padding Message</a> (<a href="#definite-padding-message" class="auto internal xref">Section 7.5</a>)</span> and the <span><a href="#indefinite-padding-message" class="internal xref">Indefinite Padding Message</a> (<a href="#indefinite-padding-message" class="auto internal xref">Section 7.6</a>)</span>.  Padding Messages are valid at any point within a Link-layer PDU.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">It is <span class="bcp14">RECOMMENDED</span> that implementations use the Definite Padding Message to add padding to a Link-layer PDU, except when less than four octets of padding are required, as the minimum length of the Definite Padding Message is four octets.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">When the link-layer protocol provides variable length Link-layer PDUs, implementations <span class="bcp14">SHOULD</span> take into account the mechanisms used by the link-layer protocol to support variable length Link-layer PDUs, and emit Link-layer PDUs of a suitable size for the underlying protocol. For example, if variable length Link-layer PDUs are implemented by the link-layer protocol using a sub-framing mechanism, then emitting Link-layer PDUs of a single, or whole number of sub-frames may increase reliability.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is an implementation matter.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1489,7 +1482,7 @@ FUNCTION processTransfer(T):
 <span class="break"></span><dl class="dlParallel" id="section-7-3">
         <dt id="section-7-3.1">Type:</dt>
         <dd style="margin-left: 1.5em" id="section-7-3.2">
-          <p id="section-7-3.2.1">The type of the Message, allocated from IANA "BTP-U Message Types" registry, see <a href="#iana-considerations" class="auto internal xref">Section 10</a>, expressed as a 8-bit unsigned integer in network byte order.<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-7-3.2.1">The type of the Message, allocated from IANA "BTPU Message Types" registry, see <a href="#iana-considerations" class="auto internal xref">Section 10</a>, expressed as a 8-bit unsigned integer in network byte order.<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-7-3.3">Length:</dt>
@@ -1689,12 +1682,12 @@ FUNCTION processTransfer(T):
       <h2 id="name-iana-considerations">
 <a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-10-1">IANA is requested to create a new registry entitled "BTP-U Message Types".  The registration policy for this registry, using terms defined in <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>, is:<a href="#section-10-1" class="pilcrow">¶</a></p>
-<span id="name-btp-u-message-types-registr"></span><div id="tab-message-types-reg">
+<p id="section-10-1">IANA is requested to create a new registry entitled "BTPU Message Types".  The registration policy for this registry, using terms defined in <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>, is:<a href="#section-10-1" class="pilcrow">¶</a></p>
+<span id="name-btpu-message-types-registra"></span><div id="tab-message-types-reg">
 <table class="left" id="table-1">
         <caption>
 <a href="#table-1" class="selfRef">Table 1</a>:
-<a href="#name-btp-u-message-types-registr" class="selfRef">BTP-U Message Types registration policies</a>
+<a href="#name-btpu-message-types-registra" class="selfRef">BTPU Message Types registration policies</a>
         </caption>
 <thead>
           <tr>
@@ -1719,11 +1712,11 @@ FUNCTION processTransfer(T):
       </table>
 </div>
 <p id="section-10-3">The initial values for the registry are:<a href="#section-10-3" class="pilcrow">¶</a></p>
-<span id="name-btp-u-message-types-initial"></span><div id="tab-message-types-vals">
+<span id="name-btpu-message-types-initial-"></span><div id="tab-message-types-vals">
 <table class="left" id="table-2">
         <caption>
 <a href="#table-2" class="selfRef">Table 2</a>:
-<a href="#name-btp-u-message-types-initial" class="selfRef">BTP-U Message Types initial values</a>
+<a href="#name-btpu-message-types-initial-" class="selfRef">BTPU Message Types initial values</a>
         </caption>
 <thead>
           <tr>
@@ -1927,7 +1920,7 @@ FUNCTION processTransfer(T):
 <a href="#name-interleaved-segmentation-of" class="selfRef">Interleaved segmentation of a sequence of Bundles of different priority</a>
           </figcaption></figure>
 </div>
-<p id="appendix-A.2-3">TODO: Description.<a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
+<p id="appendix-A.2-3">TODO: Rework this diagram to be a bit clearer, currently Bundle B arrives during the first frame processing.<a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="message-repetition">
@@ -1935,7 +1928,7 @@ FUNCTION processTransfer(T):
         <h3 id="name-message-repetition">
 <a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-message-repetition" class="section-name selfRef">Message repetition</a>
         </h3>
-<p id="appendix-A.3-1">DIAGRAM!<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.3-1">TODO: Add an example of repetitions<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1945,9 +1938,8 @@ FUNCTION processTransfer(T):
       <h2 id="name-acknowledgments">
 <a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
-<p id="appendix-B-1">EK, Brian Sipos, TCPCL authors<a href="#appendix-B-1" class="pilcrow">¶</a></p>
-<p id="appendix-B-2">Chloe<a href="#appendix-B-2" class="pilcrow">¶</a></p>
-<p id="appendix-B-3">TODO acknowledge.<a href="#appendix-B-3" class="pilcrow">¶</a></p>
+<p id="appendix-B-1">TODO acknowledge.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<p id="appendix-B-2">EK, Brian Sipos &amp; TCPCL authors, Chloe He<a href="#appendix-B-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">

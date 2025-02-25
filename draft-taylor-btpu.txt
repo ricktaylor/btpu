@@ -4,8 +4,8 @@
 
 Network Working Group                                          R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                        21 February 2025
-Expires: 25 August 2025
+Intended status: Standards Track                        25 February 2025
+Expires: 29 August 2025
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -13,7 +13,21 @@ Expires: 25 August 2025
 
 Abstract
 
-   TODO - I always do the abstract last ;)
+   This document defines a protocol for the unidirectional transfer of
+   large binary objects, typically Bundle Protocol version 7 bundles,
+   between two nodes connected by a unidirectional, unreliable, frame-
+   based link-layer protocol, without requiring IP services.
+
+   The protocol does not require a return path for acknowledgements, but
+   instead supports data repetition as a mechanism to protect against
+   data loss.  It fully supports the disaggregation of flows of bundles
+   of different priority, preventing head-of-line blocking impacting
+   performance.
+
+   The binary wire format of the protocol is designed to enable
+   performant implementation in hardware or software, with the aim of
+   enabling protocol implementations to run at the line-rate of the
+   underlying link-layer protocol.
 
 Status of This Memo
 
@@ -30,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 August 2025.
+   This Internet-Draft will expire on 29 August 2025.
 
 Copyright Notice
 
@@ -52,9 +66,8 @@ Table of Contents
    2.  Conventions and Definitions
      2.1.  Terminology
    3.  Protocol Overview
-     3.1.  Applicability
-     3.2.  Messages
-     3.3.  Padding
+     3.1.  Messages
+     3.2.  Padding
    4.  Segmentation and Transfers
      4.1.  Interleaving Transfers
      4.2.  Cancelling Transfers
@@ -111,14 +124,45 @@ Table of Contents
    These characteristics provide a common baseline that allows the
    definition of a lightweight protocol for transferring BPv7 bundles
    meeting the requirements of a BPv7 CLA, and this document describes
-   such a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U),
+   such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU),
    suitable for implementation over any link-layer protocol that shares
-   these characteristics.
+   these characteristics.  The protocol is applicable to other link-
+   layer technologies which share these characteristics beyond those
+   commonly used for space communication, for example 5G Unstructured
+   PDUs [_5G], or [IEEE.802.3], without requiring underlying IP
+   services.
 
-   Although primarily designed for space communication, the protocol is
-   applicable to other link-layer technologies which can share these
-   characteristics, for example 5G Unstructured PDUs [_5G], or
-   [IEEE.802.3], without requiring a full IP stack.
+   The driving use-case of the protocol has been the transfer of BPv7
+   formatted Bundles, however it is equally capable of transferring any
+   kind of binary data, but includes no explicit discriminator of the
+   type of a particular Bundle.  If multiple different types of Bundle
+   are to be transferred by a single implementation, this specification
+   considers the differentiation between different Bundle types to be a
+   matter for the implementation.  For example, both BPv6 ([RFC5050])
+   formatted Bundles and BPv7 Bundles can be multiplexed without issue,
+   as the different formats can be distinguished by simple examination
+   of the initial octets of a received Bundle by an implementation.
+   Additionally, the segmentation mechanism enables the use of this
+   protocol with Bundle formats that do not support some form of
+   fragmentation.
+
+   Although designed for any link-layer protocol that shares the
+   characteristics defined in Section 1, additional specification or
+   profiling may be required to map the constructs of the link-layer
+   protocol to the mechanisms defined in this specification.
+
+                         +----------------------+
+                         |  DTN Application     |
+                         +----------------------+
+                         |  BPv7 / BPv6         |
+                         +----------------------+
+                         |  BTPU               |
+                         +----------------------+
+                         |  Link-layer Protocol |
+                         +----------------------+
+
+     Figure 1: The location of BTPU in relation to the Bundle Protocol
+                         and a Link- layer protocol
 
 2.  Conventions and Definitions
 
@@ -173,41 +217,7 @@ Table of Contents
    other Bundles, avoiding "head of line blocking", see Section 4.1 for
    more detail.
 
-3.1.  Applicability
-
-   The protocol has been designed to transfer BPv7 formatted Bundles,
-   however it is equally capable of transferring any kind of binary
-   data, but includes no explicit discriminator of the type of a
-   particular Bundle.  If multiple different types of Bundle are to be
-   transferred by a single implementation, this specification considers
-   the differentiation between different Bundle types to be a matter for
-   the implementation.  For example, both BPv6 ([RFC5050]) formatted
-   Bundles and BPv7 Bundles can be multiplexed without issue, as the
-   different formats can be distinguished by simple examination of the
-   initial octets of a received Bundle by an implementation.
-   Additionally, the segmentation mechanism enables the use of this
-   protocol with Bundle formats that do not support some form of
-   fragmentation.
-
-   Although designed for any link-layer protocol that shares the
-   characteristics defined in Section 1, additional specification or
-   profiling may be required to map the constructs of the link-layer
-   protocol to the mechanisms defined in this specification.
-
-                         +----------------------+
-                         |  DTN Application     |
-                         +----------------------+
-                         |  BPv7 / BPv6         |
-                         +----------------------+
-                         |  BTP-U               |
-                         +----------------------+
-                         |  Link-layer Protocol |
-                         +----------------------+
-
-         Figure 1: The location of BTP-U in relation to the Bundle
-                    Protocol and a Link- layer protocol
-
-3.2.  Messages
+3.1.  Messages
 
    The basic primitive of the protocol is the Message, a self-describing
    unit of protocol control information of variable length.  The sender
@@ -224,7 +234,7 @@ Table of Contents
 
    See Section 7 for detail of each type of Message.
 
-3.3.  Padding
+3.2.  Padding
 
    Because the size of a Bundle is not expected to exactly match the
    size of a Link-layer PDU, an implementation will likely need to add
@@ -437,7 +447,7 @@ Table of Contents
    |                       ... Content ...                         :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-   Type:  The type of the Message, allocated from IANA "BTP-U Message
+   Type:  The type of the Message, allocated from IANA "BTPU Message
       Types" registry, see Section 10, expressed as a 8-bit unsigned
       integer in network byte order.
 
@@ -636,7 +646,7 @@ Table of Contents
 
 10.  IANA Considerations
 
-   IANA is requested to create a new registry entitled "BTP-U Message
+   IANA is requested to create a new registry entitled "BTPU Message
    Types".  The registration policy for this registry, using terms
    defined in [RFC8126], is:
 
@@ -650,7 +660,7 @@ Table of Contents
    | 0x80..0xFF | Reserved for future expansion |
    +------------+-------------------------------+
 
-     Table 1: BTP-U Message Types registration
+      Table 1: BTPU Message Types registration
                       policies
 
    The initial values for the registry are:
@@ -671,7 +681,7 @@ Table of Contents
    |  5   | Transfer Cancel Message (Section 7.4)    | This document |
    +------+------------------------------------------+---------------+
 
-               Table 2: BTP-U Message Types initial values
+                Table 2: BTPU Message Types initial values
 
 11.  References
 
@@ -798,19 +808,18 @@ A.2.  Segmentation of a sequence of Bundles of different priority
       Figure 4: Interleaved segmentation of a sequence of Bundles of
                             different priority
 
-   TODO: Description.
+   TODO: Rework this diagram to be a bit clearer, currently Bundle B
+   arrives during the first frame processing.
 
 A.3.  Message repetition
 
-   DIAGRAM!
+   TODO: Add an example of repetitions
 
 Appendix B.  Acknowledgments
 
-   EK, Brian Sipos, TCPCL authors
-
-   Chloe
-
    TODO acknowledge.
+
+   EK, Brian Sipos & TCPCL authors, Chloe He
 
 Author's Address
 
