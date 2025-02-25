@@ -1,7 +1,7 @@
 ---
 
 title: "Bundle Transfer Protocol - Unidirectional"
-abbrev: "BTP-U"
+abbrev: "BTPU"
 category: std
 
 docname: draft-taylor-btpu-latest
@@ -89,7 +89,7 @@ In the realm of near- and deep-space communication there are a number of standar
 - They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.
 - They are point-to-point: although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
 
-These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTP-U), suitable for implementation over any link-layer protocol that shares these characteristics.
+These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.
 
 Although primarily designed for space communication, the protocol is applicable to other link-layer technologies which can share these characteristics, for example 5G Unstructured PDUs {{5G}}, or {{IEEE.802.3}}, without requiring a full IP stack.
 
@@ -135,11 +135,11 @@ Although designed for any link-layer protocol that shares the characteristics de
     +----------------------+
     |  BPv7 / BPv6         |
     +----------------------+
-    |  BTP-U               |
+    |  BTPU               |
     +----------------------+
     |  Link-layer Protocol |
     +----------------------+
-{: #fig-stack title="The location of BTP-U in relation to the Bundle Protocol and a Link-layer protocol" artwork-align="center" }
+{: #fig-stack title="The location of BTPU in relation to the Bundle Protocol and a Link-layer protocol" artwork-align="center" }
 
 ## Messages
 
@@ -250,7 +250,7 @@ All protocol Messages except the [Indefinite Padding Message](#indefinite-paddin
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Type:
-: The type of the Message, allocated from IANA "BTP-U Message Types" registry, see [](#iana-considerations), expressed as a 8-bit unsigned integer in network byte order.
+: The type of the Message, allocated from IANA "BTPU Message Types" registry, see [](#iana-considerations), expressed as a 8-bit unsigned integer in network byte order.
 
 Length:
 : The length of the Message in octets, excluding the 4 octets of the header itself, expressed as a 24-bit unsigned integer in network byte order.
@@ -379,14 +379,14 @@ The following caveats should be considered before deploying instances of this pr
 
 # IANA Considerations
 
-IANA is requested to create a new registry entitled "BTP-U Message Types".  The registration policy for this registry, using terms defined in {{!RFC8126}}, is:
+IANA is requested to create a new registry entitled "BTPU Message Types".  The registration policy for this registry, using terms defined in {{!RFC8126}}, is:
 
 | Values | Registration Policy |
 |:-----: |:------ |
 | 0..0x6F | Standards Action |
 | 0x70..0x7F | Private Use |
 | 0x80..0xFF | Reserved for future expansion |
-{: #tab-message-types-reg align="left" title="BTP-U Message Types registration policies"}
+{: #tab-message-types-reg align="left" title="BTPU Message Types registration policies"}
 
 The initial values for the registry are:
 
@@ -398,7 +398,7 @@ The initial values for the registry are:
 | 3 | [Transfer Segment Message](#transfer-segment-message) | This document |
 | 4 | [Transfer End Message](#transfer-end-message) | This document |
 | 5 | [Transfer Cancel Message](#transfer-cancel-message) | This document |
-{: #tab-message-types-vals align="left" title="BTP-U Message Types initial values"}
+{: #tab-message-types-vals align="left" title="BTPU Message Types initial values"}
 
 --- back
 
