@@ -2,7 +2,7 @@
 
 
 
-Network Working Group                                          R. Taylor
+Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
 Intended status: Standards Track                        25 February 2025
 Expires: 29 August 2025
