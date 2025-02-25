@@ -26,40 +26,40 @@ venue:
 # group: "Delay/Disruption Tolerant Networking"
 
 type: "Working Group"
-mail: "<dtn@ietf.org>"
-arch: "<https://mailarchive.ietf.org/arch/browse/dtn/>"
+mail: dtn@ietf.org
+arch: https://mailarchive.ietf.org/arch/browse/dtn/
 github: "ricktaylor/btpu"
-latest: "<https://ricktaylor.github.io/btpu/draft-taylor-dtn-btpu.html>"
+latest: https://ricktaylor.github.io/btpu/draft-taylor-dtn-btpu.html
 
 author:
 
 - fullname: Rick Taylor
   organization: Aalyria Technologies
-  email: <rtaylor@aalyria.com>
+  email: rtaylor@aalyria.com
 
 normative:
 
 informative:
   USLP:
-    target: "<https://public.ccsds.org/Pubs/732x1b3e1.pdf>"
+    target: https://public.ccsds.org/Pubs/732x1b3e1.pdf
     title: Unified Space Data Link Protocol (USLP)
     date: 2024-06
     seriesinfo:
       "CCSDS": "732.1-B-3"
   TM:
-    target: "<https://public.ccsds.org/Pubs/132x0b3.pdf>"
+    target: https://public.ccsds.org/Pubs/132x0b3.pdf
     title: Telemetry (TM) Space Data Link Protocol
     date: 2021-10
     seriesinfo:
       "CCSDS": "132.0-B-3"
   AOS:
-    target: "<https://public.ccsds.org/Pubs/132x0b3.pdf>"
+    target: https://public.ccsds.org/Pubs/132x0b3.pdf
     title: Advanced Orbiting Systems (AOS) Space Data Link Protocol
     date: 2021-10
     seriesinfo:
       "CCSDS": "732.0-B-4"
   DVB-S2X:
-    target: <https://www.etsi.org/deliver/etsi_en/302300_302399/30230702/01.04.01_60/en_30230702v010401p.pdf>
+    target: https://www.etsi.org/deliver/etsi_en/302300_302399/30230702/01.04.01_60/en_30230702v010401p.pdf
     title: >
       Digital Video Broadcasting (DVB);
       Second generation framing structure, channel coding and
