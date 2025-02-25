@@ -75,7 +75,11 @@ informative:
 
 --- abstract
 
-TODO - I always do the abstract last ;)
+This document defines a protocol for the unidirectional transfer of large binary objects, typically Bundle Protocol version 7 bundles, between two nodes connected by a unidirectional, unreliable, frame-based link-layer protocol, without requiring IP services.
+
+The protocol does not require a return path for acknowledgements, but instead supports data repetition as a mechanism to protect against data loss.  It fully supports the disaggregation of flows of bundles of different priority, preventing head-of-line blocking impacting performance.
+
+The binary wire format of the protocol is designed to enable performant implementation in hardware or software, with the aim of enabling protocol implementations to run at the line-rate of the underlying link-layer protocol.
 
 --- middle
 
@@ -89,9 +93,22 @@ In the realm of near- and deep-space communication there are a number of standar
 - They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to the receiver in its entirety or not at all. Frames may be of fixed or variable length.
 - They are point-to-point: although the medium over which the data transfer occurs may be broadcast in nature, the link-layer protocol provides an uncontested point-to-point communication channel between a single sender and a single receiver.
 
-These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.
+These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 CLA, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.  The protocol is applicable to other link-layer technologies which share these characteristics beyond those commonly used for space communication, for example 5G Unstructured PDUs {{5G}}, or {{IEEE.802.3}}, without requiring underlying IP services.
 
-Although primarily designed for space communication, the protocol is applicable to other link-layer technologies which can share these characteristics, for example 5G Unstructured PDUs {{5G}}, or {{IEEE.802.3}}, without requiring a full IP stack.
+The driving use-case of the protocol has been the transfer of BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 ({{?RFC5050}}) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.  Additionally, the segmentation mechanism enables the use of this protocol with Bundle formats that do not support some form of fragmentation.
+
+Although designed for any link-layer protocol that shares the characteristics defined in [](#introduction), additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
+
+    +----------------------+
+    |  DTN Application     |
+    +----------------------+
+    |  BPv7 / BPv6         |
+    +----------------------+
+    |  BTPU               |
+    +----------------------+
+    |  Link-layer Protocol |
+    +----------------------+
+{: #fig-stack title="The location of BTPU in relation to the Bundle Protocol and a Link-layer protocol" artwork-align="center" }
 
 # Conventions and Definitions
 
@@ -123,23 +140,6 @@ The purpose of the protocol is to transfer a series of Bundles between two nodes
 This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
 As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.
-
-## Applicability
-
-The protocol has been designed to transfer BPv7 formatted Bundles, however it is equally capable of transferring any kind of binary data, but includes no explicit discriminator of the type of a particular Bundle. If multiple different types of Bundle are to be transferred by a single implementation, this specification considers the differentiation between different Bundle types to be a matter for the implementation. For example, both BPv6 ({{?RFC5050}}) formatted Bundles and BPv7 Bundles can be multiplexed without issue, as the different formats can be distinguished by simple examination of the initial octets of a received Bundle by an implementation.  Additionally, the segmentation mechanism enables the use of this protocol with Bundle formats that do not support some form of fragmentation.
-
-Although designed for any link-layer protocol that shares the characteristics defined in [](#introduction), additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
-
-    +----------------------+
-    |  DTN Application     |
-    +----------------------+
-    |  BPv7 / BPv6         |
-    +----------------------+
-    |  BTPU               |
-    +----------------------+
-    |  Link-layer Protocol |
-    +----------------------+
-{: #fig-stack title="The location of BTPU in relation to the Bundle Protocol and a Link-layer protocol" artwork-align="center" }
 
 ## Messages
 
@@ -452,16 +452,14 @@ An example of the transmission of three Bundles of varying sizes and different p
     +----------------------+----------------------+----------------------+
 {: #fig-interleaved title="Interleaved segmentation of a sequence of Bundles of different priority" }
 
-TODO: Description.
+TODO: Rework this diagram to be a bit clearer, currently Bundle B arrives during the first frame processing.
 
 ## Message repetition
 
-DIAGRAM!
+TODO: Add an example of repetitions
 
 # Acknowledgments
 
-EK, Brian Sipos, TCPCL authors
-
-Chloe
-
 TODO acknowledge.
+
+EK, Brian Sipos & TCPCL authors, Chloe He
