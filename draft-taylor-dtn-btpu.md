@@ -4,7 +4,7 @@ title: "Bundle Transfer Protocol - Unidirectional"
 abbrev: "BTPU"
 category: std
 
-docname: draft-taylor-btpu-latest
+docname: draft-taylor-dtn-btpu-latest
 submissiontype: IETF # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
@@ -29,7 +29,7 @@ type: "Working Group"
 mail: "<dtn@ietf.org>"
 arch: "<https://mailarchive.ietf.org/arch/browse/dtn/>"
 github: "ricktaylor/btpu"
-latest: "<https://ricktaylor.github.io/btpu/draft-taylor-btpu.html>"
+latest: "<https://ricktaylor.github.io/btpu/draft-taylor-dtn-btpu.html>"
 
 author:
 
