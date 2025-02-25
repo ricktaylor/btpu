@@ -9,7 +9,7 @@ Expires: 29 August 2025
 
 
                Bundle Transfer Protocol - Unidirectional
-                        draft-taylor-btpu-latest
+                      draft-taylor-dtn-btpu-latest
 
 Abstract
 
