@@ -10,7 +10,6 @@ number:
 date:
 consensus: true
 v: 3
-
 area: INT
 workgroup: "Delay/Disruption Tolerant Networking"
 
@@ -25,6 +24,14 @@ author:
 - fullname: Rick Taylor
   organization: Aalyria Technologies
   email: rtaylor@aalyria.com
+
+venue:
+  group: "Delay/Disruption Tolerant Networking"
+  type: "Working Group"
+  mail: "dtn@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/dtn/"
+  github: "ricktaylor/btpu"
+  latest: "https://ricktaylor.github.io/btpu/draft-taylor-dtn-btpu.html"
 
 normative:
 
