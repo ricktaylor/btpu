@@ -163,7 +163,7 @@ The transfer of a sequence of Segments of a Bundle a sender MUST be emitted via 
 
 The receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the order of their sequence number.  When all the Segments have been received and concatenated, the receiver is assumed to pass the recombined Bundle to an upper layer for further processing.
 
-Transfer numbers are encoded using 32-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
+Transfer numbers are expressed as 32-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" via zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
 ## Interleaving Transfers
 
@@ -246,10 +246,10 @@ All protocol Messages except the [Indefinite Padding Message](#indefinite-paddin
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Type:
-: The type of the Message, allocated from IANA "BTPU Message Types" registry, see [](#iana-considerations), expressed as a 8-bit unsigned integer in network byte order.
+: The type of the Message, allocated from IANA "BTPU Message Types" registry, see [](#iana-considerations), encoded as a 8-bit unsigned integer in network byte order.
 
 Length:
-: The length of the Message in octets, excluding the 4 octets of the header itself, expressed as a 24-bit unsigned integer in network byte order.
+: The length of the Message in octets, excluding the 4 octets of the header itself, encoded as a 24-bit unsigned integer in network byte order.
 
 Content:
 : A sequence of octets of data of variable length determined by the corresponding Length field value, encoded according to the type of the Message.
@@ -369,7 +369,7 @@ The following caveats should be considered before deploying instances of this pr
 
 1. It is unreliable. Although there may be a link-layer protocol mechanism for a receiver to be notified that a frame has been lost in transmission, due to the unidirectional nature of the link-layer there is no in-band return path suitable for higher-layer acknowledgement of transfer success.  Any acknowledgement system designed to provide reliability MUST use a logically separate path from receiver back to sender.
 
-1. It does not provide congestion control or signalling. The underlying link-layer is expected to provide an uncontested point-to-point channel, and hence such mechanisms are considered to be out of scope. The protocol MUST NOT be deployed in environments where congestion may occur, such as the public Internet, when the underlying link-layer, or a higher layer, does not provide suitable congestion control.
+1. It does not provide congestion control or signalling. The underlying link-layer is expected to provide an uncontested channel between sender and receiver, and hence such mechanisms are considered to be out of scope. The protocol MUST NOT be deployed in environments where congestion may occur, such as the public Internet, when the underlying link-layer does not provide suitable congestion control.
 
 1. It requires an out-of-band mechanism for configuration. This can either be via pre-placed static configuration, a parallel dynamic control-plane protocol, or some other mechanism beyond the scope of this specification.
 
