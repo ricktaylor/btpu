@@ -83,10 +83,11 @@ The binary wire format of the protocol is designed to enable performant implemen
 
 Bundle Protocol version 7 (BPv7) is defined in terms a layered logical architecture, detailed in {{!RFC9171}}, wherein the responsibility for the storing and routing of bundles lies with the Bundle Processing Agent (BPA), and the BPA relies upon Convergence Layer Protocols (CLAs) to provide bundle transport between nodes. CLAs provide a unified interface to the BPA, allowing BPAs to be link-layer agnostic, but still use a diverse range of Convergence Layer Protocols to transfer bundles between BPAs over underlying link-layer protocols.
 
-In the realm of near- and deep-space communication there are a number of standardized link-layer protocols, including {{USLP}}, {{TM}}, {{AOS}}, {{DVB-S2X}}, that share a pair of common properties:
+In the realm of near- and deep-space communication there are a number of standardized link-layer protocols, including {{USLP}}, {{TM}}, {{AOS}}, {{DVB-S2X}}, that share a set of common properties:
 
 - They are unidirectional: data transfer occurs in one direction only, there is no in-band return path for data.
 - They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to a receiver in its entirety or not at all. Frames may be of fixed or variable length.
+- They provide a single logical channel: the communication between a sender and one or more receivers of frames can be logically separated from other communication over the link-layer by an implementation, perhaps by the use of channel identifiers, circuit identifiers, or tuples of source and destination address information.
 
 These characteristics provide a common baseline that allows the definition of a lightweight protocol for transferring BPv7 bundles meeting the requirements of a BPv7 Convergence Layer Protocol, and this document describes such a protocol, Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.  The protocol is applicable to other link-layer technologies which share these characteristics beyond those commonly used for space communication, for example 5G Unstructured PDUs {{5G}}, or {{IEEE.802.3}}, without requiring underlying IP services.  Although designed for any link-layer protocol that shares the characteristics above, additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
 
@@ -95,7 +96,7 @@ These characteristics provide a common baseline that allows the definition of a 
     +----------------------+
     |  BPv7 / BPv6         |
     +----------------------+
-    |  BTPU               |
+    |  BTPU                |
     +----------------------+
     |  Link-layer Protocol |
     +----------------------+
@@ -132,7 +133,7 @@ The purpose of the protocol is to transfer a series of Bundles between two nodes
 
 This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
-As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.
+As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.  The bundle transfers are expected to occur over the same logical channel, rather than using a separate channel for each bundle or group of bundles that share priority.  This does not preclude using multiple logical channels, but each channel is expected to be an independent instance of the protocol.
 
 ## Messages
 
@@ -419,24 +420,24 @@ An example of the transmission of three Bundles of varying sizes and equal prior
     +----------------------+----------------------+----------------------+
 {: #fig-sequential title="Segmentation of a sequence of Bundles of equal priority" }
 
-Bundle A is transferred as two Segments, included in the first and second Link-layer PDU, as Transfer 1.  Bundle B fits completely in the second Link-layer PDU, and is therefore transferred without segmentation.  Bundle C is transferred as two Segments split between the second and third PDU, but padding is required to fill the third PDU.  An alternative algorithm could have selected to not segment Bundle C, but to pad the second PDU and include Bundle C without segmentation in the third PDU, without changing the semantics, as an implementation preference.
+Bundle A is emitted as two Segments, included in the first and second Link-layer PDU, as Transfer 1.  Bundle B fits completely in the second Link-layer PDU, and is therefore emitted without segmentation.  Bundle C is emitted as two Segments split between the second and third PDU, but padding is required to fill the third PDU.  An alternative algorithm could have selected to not segment Bundle C, but to pad the second PDU and include Bundle C without segmentation in the third PDU, without changing the semantics, as an implementation preference.
 
 ## Segmentation of a sequence of Bundles of different priority
 
 An example of the transmission of three Bundles of varying sizes and different priority in three Link-layer PDUs is shown in [](#fig-interleaved).
 
-            +---------------------------+
-            | Bundle B                  |  High Priority
-            +---------------------------+
+                           +---------------------------+
+                           | Bundle C                  |  High Priority
+                           +---------------------------+
     +--------------+-----------------+
-    | Bundle A     | Bundle C        |     Low Priority
+    | Bundle A     | Bundle B        |                    Low Priority
     +--------------+-----------------+
 
 
-    +----------------------+------------+----+----+------------+---------+
-    | T1    | Transfer 2   | Transfer 2 | T1 | T3 | Transfer 3 | Padding |
-    | S0    | Segment 0    | Segment 1  | S1 | S0 | Segment 1  |         |
-    +----------------------+------------+----+----+------------+---------+
+    +--------------+-------+----------------------+----+----------+------+
+    | Complete     | T1    | Transfer 2           | T2 | T1       | Pad  |
+    | Bundle       | S0    | Segment 0            | S1 | S1       |      |
+    +--------------+-------+----------------------+----+----------+------+
 
     :                      :                      :                      :
 
@@ -445,14 +446,12 @@ An example of the transmission of three Bundles of varying sizes and different p
     +----------------------+----------------------+----------------------+
 {: #fig-interleaved title="Interleaved segmentation of a sequence of Bundles of different priority" }
 
-TODO: Rework this diagram to be a bit clearer, currently Bundle B arrives during the first frame processing.
+Bundle A is emitted without segmentation, and the Bundle B is segmented to fill the first Link-layer PDU. During the preparation of the next Link-layer PDU high priority Bundle C is queued for emission. Therefore the further emission of Bundle B is paused, and Bundle C is emitted as two Segments, with the third Link-layer PDU containing the second Segments of both Bundle B and C, plus padding.  The order of emission of the second Segments of Bundle B and C makes no semantic difference.
 
-## Message repetition
+## Repetition of Bundle Segments
 
 TODO: Add an example of repetitions
 
 # Acknowledgments
 
-TODO acknowledge.
-
-EK, Brian Sipos & TCPCL authors, Chloe He
+The author would like to thank Erik Kline, Brian Sipos, and Chloe He for their invaluable feedback and discussion of the protocol, and this work would not exist without the excellent prior work by the TCP-CLv4 authors.
