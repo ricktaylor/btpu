@@ -373,9 +373,9 @@ The following caveats should be considered before deploying instances of this pr
 
 # IANA Considerations
 
-IANA is requested to create a new registry entitled "BTPU Message Types", in the existing "Bundle Protocol" registry group.  The registration policy for this registry, using terms defined in {{!RFC8126}}, is:
+IANA is requested to create a new registry entitled "BTPU Message Types", in the existing "Bundle Protocol" registry group.  The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
 
-| Values | Registration Policy |
+| Values | Registration Procedure |
 |:-----: |:------ |
 | 0..0x6F | Standards Action |
 | 0x70..0x7F | Private Use |
@@ -398,6 +398,8 @@ The initial values for the registry are:
 
 # Examples
 
+The following sections has examples of an implementation emitting Bundles into Link-layer PDUs.  Although the examples demonstrate the core principles, for example Bundle Segmentation with priority, the algorithm used to pack Messages into Link-layer PDUs is just for example purposes.  An implementation may use an alternate algorithm that meets this specification but suits its overall architecture, and where this is applicable is noted in each example.
+
 ## Segmentation of a sequence of Bundles of equal priority
 
 An example of the transmission of three Bundles of varying sizes and equal priority in three Link-layer PDUs is shown in [](#fig-sequential).
@@ -410,7 +412,7 @@ An example of the transmission of three Bundles of varying sizes and equal prior
 
     +----------------------+----+------------+----+------------+---------+
     | Transfer 1           | T1 |  Complete  | T2 | Transfer 2 | Padding |
-    | Segment 0            | S1 |  Bundle    | S0 | Segment 1  |         |
+    | Segment 0            | S1 |  Bundle B  | S0 | Segment 1  |         |
     +----------------------+----+------------+----+------------+---------+
 
     :                      :                      :                      :
@@ -433,10 +435,12 @@ An example of the transmission of three Bundles of varying sizes and different p
     | Bundle A     | Bundle B        |                    Low Priority
     +--------------+-----------------+
 
+                           :                           :
+    :              :                 :
 
     +--------------+-------+----------------------+----+----------+------+
     | Complete     | T1    | Transfer 2           | T2 | T1       | Pad  |
-    | Bundle       | S0    | Segment 0            | S1 | S1       |      |
+    | Bundle A     | S0    | Segment 0            | S1 | S1       |      |
     +--------------+-------+----------------------+----+----------+------+
 
     :                      :                      :                      :
@@ -450,7 +454,32 @@ Bundle A is emitted without segmentation, and the Bundle B is segmented to fill 
 
 ## Repetition of Bundle Segments
 
-TODO: Add an example of repetitions
+An example of the transmission of two Bundles of differing required repetition in three Link-layer PDUs is shown in [](#fig-repetition).
+
+    +--------------+
+    | Bundle A     |                              2x repetition required
+    +--------------+
+
+               +-------------------------------+
+               | Bundle B                      |  No repetition required
+               +-------------------------------+
+
+    :              :
+               :                               :
+
+    +--------------+-------+--------------+-------+---------------+------+
+    | Complete     | T1    | Complete     | T1    | Transfer 1    | Pad  |
+    | Bundle A     | S0    | Bundle A     | S1    | Segment 2     |      |
+    +--------------+-------+--------------+-------+---------------+------+
+
+    :                      :                      :                      :
+
+    +----------------------+----------------------+----------------------+
+    | Link-layer PDU N     | Link-layer PDU N + 1 | Link-layer PDU N + 2 |
+    +----------------------+----------------------+----------------------+
+{: #fig-repetition title="Repetition of some Bundles within a sequence of Segments" }
+
+Bundle A is required by some higher-layer loss protection policy to be repeated twice in two separate Link-layer PDUs.  Bundle A does not require additional loss protection, and can therefore be transmitted once.  As Bundle A can fit in its entirety in a single Link-layer PDU, it is emitted as a Complete Bundle Message, with Bundle B emitted as a Segment Messages sized to fill the remainder of each PDU.  The Complete Bundle Message of Bundle A is repeated in the second Link-layer PDU, with the remainder of the second PDU filled with the next Segment of Bundle B.  The third Link-layer PDU contains the last Segment of Bundle B and padding.  An alternate implementation could have segmented both Bundles, and repeated the Segments of Bundle A whilst interleaving the Segments of Bundle B.
 
 # Acknowledgments
 
