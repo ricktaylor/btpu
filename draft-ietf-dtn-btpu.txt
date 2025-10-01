@@ -4,8 +4,8 @@
 
 Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                            19 June 2025
-Expires: 21 December 2025
+Intended status: Standards Track                          1 October 2025
+Expires: 4 April 2026
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 December 2025.
+   This Internet-Draft will expire on 4 April 2026.
 
 Copyright Notice
 
@@ -90,19 +90,27 @@ Table of Contents
      4.2.  Cancelling Transfers
    5.  Transfer Window
    6.  Handling Link-layer PDU Loss
-   7.  Message Definitions
-     7.1.  Bundle Message
-     7.2.  Transfer Start Message
-     7.3.  Transfer Segment Message
-     7.4.  Transfer Cancel Message
-     7.5.  Definite Padding Message
-     7.6.  Indefinite Padding Message
-   8.  Security Considerations
-   9.  Deployment Considerations
-   10. IANA Considerations
-   11. References
-     11.1.  Normative References
-     11.2.  Informative References
+   7.  Message Format
+     7.1.  Message Flags
+     7.2.  Metadata Items
+   8.  Message Definitions
+     8.1.  Bundle Message
+     8.2.  Transfer Start Message
+     8.3.  Transfer Segment Message
+     8.4.  Transfer Cancel Message
+     8.5.  Definite Padding Message
+     8.6.  Indefinite Padding Message
+   9.  Standard Metadata
+     9.1.  Bundle Length Metadata
+   10. Security Considerations
+   11. Deployment Considerations
+   12. IANA Considerations
+     12.1.  BTPU Message Types Registry
+     12.2.  BTPU Metadata Types Registry
+     12.3.  BTPU Message Flags Registry
+   13. References
+     13.1.  Normative References
+     13.2.  Informative References
    Appendix A.  Examples
      A.1.  Segmentation of a sequence of Bundles of equal priority
      A.2.  Segmentation of a sequence of Bundles of different priority
@@ -203,7 +211,7 @@ Table of Contents
       transmission unit or frame, as defined by the link-layer protocol
       specification.
 
-   Message:  A single protocol data item, see Section 7.
+   Message:  A single protocol data item, see Section 8.
 
    Segment:  In order to transfer a Bundle larger than a Link-layer PDU,
       Bundles may be subdivided into Segments in order to fit within a
@@ -254,7 +262,7 @@ Table of Contents
    transmission of the Link-layer PDU itself, as many Messages may
    emitted prior to the transmission of the containing PDU.
 
-   See Section 7 for detail of each type of Message.
+   See Section 8 for detail of each type of Message.
 
 3.2.  Padding
 
@@ -262,8 +270,8 @@ Table of Contents
    size of a Link-layer PDU, an implementation will likely need to add
    padding to the PDU so that the Link-layer PDU size requirements are
    met.  Two Messages are available for this purpose: The Definite
-   Padding Message (Section 7.5) and the Indefinite Padding Message
-   (Section 7.6).  Padding Messages are valid at any point within a
+   Padding Message (Section 8.5) and the Indefinite Padding Message
+   (Section 8.6).  Padding Messages are valid at any point within a
    Link-layer PDU.
 
    It is RECOMMENDED that implementations use the Definite Padding
@@ -291,7 +299,7 @@ Table of Contents
    sender and each Segment is emitted in its own a Message.  However, if
    a complete Bundle can fit in the next Link-layer PDU, then the Bundle
    SHOULD be transferred without segmentation, see the Bundle Message
-   (Section 7.1).
+   (Section 8.1).
 
    Each Segment is assigned a monotonically decreasing integral Segment
    Index that indicates the relative position of the Segment within the
@@ -300,10 +308,10 @@ Table of Contents
    Index in the Transfer Start Message.
 
    The start of a transfer of a sequence of Segments MUST be indicated
-   by emitting a Transfer Start Message (Section 7.2), including the
+   by emitting a Transfer Start Message (Section 8.2), including the
    index of the first Segment and the identifier of the Transfer that is
    now complete.  The remaining Segments of a Bundle MUST be emitted by
-   the sender as a series of Transfer Segment Messages (Section 7.3)
+   the sender as a series of Transfer Segment Messages (Section 8.3)
    carrying the same Transfer identifier.
 
    In addition to a Segment Index, every Segment is associated with a
@@ -339,7 +347,7 @@ Table of Contents
 4.2.  Cancelling Transfers
 
    A Transfer may be aborted by the sender while a Transfer is in
-   progress by the emitting of a Transfer Cancel Message (Section 7.4)
+   progress by the emitting of a Transfer Cancel Message (Section 8.4)
    containing the identifier of the Transfer to cancel.  A receiver of a
    Transfer Cancel Message SHOULD discard any segments already received
    and MUST ignore any further Messages associated with the Transfer.
@@ -429,7 +437,7 @@ Table of Contents
    different Transfers may repeat Messages differently.
 
    Although it is RECOMMENDED that Transfer Segment Messages
-   (Section 7.3) are emitted in descending order of Segment Index; once
+   (Section 8.3) are emitted in descending order of Segment Index; once
    emitted, any Message MAY be repeated any number of times, in any
    order.  The number of repetitions of a particular Message is an
    implementation matter that can be influenced by many factors,
@@ -455,10 +463,10 @@ Table of Contents
    a duplicate Link-layer PDU, it SHOULD be delivered to this protocol
    only once.
 
-7.  Message Definitions
+7.  Message Format
 
    All protocol Messages except the Indefinite Padding Message
-   (Section 7.6) follow the common "Type-Length-Value" formatting
+   (Section 8.6) follow the common "Type-Length-Value" formatting
    pattern, with each Message being identified by a four octet header
    that encodes the type of the Message, and the length of the content
    of the Message.
@@ -466,24 +474,85 @@ Table of Contents
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Type          | Length (24-bit unsigned integer)              |
+   |     Type      |Flags|      Length (20-bit unsigned int)       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |              ... Optional Metadata Items ...                  :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                       ... Content ...                         :
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    Type:  The type of the Message, allocated from IANA "BTPU Message
-      Types" registry, see Section 10, encoded as a 8-bit unsigned
+      Types" registry, see Section 12, encoded as a 8-bit unsigned
       integer in network byte order.
 
+   Flags:  A 4-bit field for flags, see Section 7.1.
+
    Length:  The length of the Message in octets, excluding the 4 octets
-      of the header itself, encoded as a 24-bit unsigned integer in
-      network byte order.
+      of the header itself, encoded as a 20-bit unsigned integer in
+      network byte order.  This length includes both the optional
+      Metadata Items (Section 7.2) and the Content.
 
-   Content:  A sequence of octets of data of variable length determined
-      by the corresponding Length field value, encoded according to the
-      type of the Message.
+   Content:  A sequence of octets of data.  Its length is the main
+      Message Length minus the total length of any present Metadata
+      Items.  The content is encoded according to the Type of the
+      Message.
 
-7.1.  Bundle Message
+7.1.  Message Flags
+
+   The Message Flags field is a 4-bit
+   // 4 bits is considered enough, as it allows a 20-bit Message Length
+   // field, and many additional flags could be better expressed with
+   // Metadata Items. field, formatted as follows:
+
+    0 1 2 3
+   +-+-+-+-+
+   |M| RFU |
+   +-+-+-+-+
+
+   M:  The 'M' (Metadata) flag.  If this bit is set to 1, it indicates
+      that one or more Metadata Items are present immediately following
+      the Message header.
+
+   RFU (Reserved for Future Use):  These 3 bits are unassigned.  They
+      MUST be set to zero by the sender and MUST be ignored by the
+      receiver.
+
+7.2.  Metadata Items
+
+   To allow the transfer of optional additional information, Messages
+   can carry extra information in the form of Metadata Items.  Because
+   Messages may be lost in transmission, this metadata provides
+   additional information about the Transfer itself, rather than being
+   particular to the containing Message, and may be repeated in multiple
+   different or repeated Messages.
+
+   If the 'M' flag is set in the Message header, the header is followed
+   by one or more Metadata Items.  Each item is encoded in a Type-
+   Length-Value format, with a 2-octet header followed by a variable-
+   length value.  This format intentionally omits a flags field to
+   prevent nested metadata.
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Metadata Type |    Length     |       ... Value ...           :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Metadata Type:  An 8-bit identifier for the Metadata Item, allocated
+      from the "BTPU Metadata Types" IANA registry, see Section 12,
+      encoded as a 8-bit unsigned integer in network byte order.
+
+   Length:  An 8-bit unsigned integer specifying the length of the Value
+      field in octets.  This limits the value of a single Metadata Item
+      to 255 octets.
+
+   Value:  The payload of the Metadata Item.
+
+8.  Message Definitions
+
+   The following standard protocol Messages are defined:
+
+8.1.  Bundle Message
 
    The Bundle Message is used to encapsulate an entire Bundle, and
    SHOULD be used by an implementation when a Bundle will fit in its
@@ -494,11 +563,12 @@ Table of Contents
    A Bundle Message has a type of 2.  The Message Content MUST be a
    valid Bundle.
 
-   Emitting a Bundle Message with a Length field value of zero (0), i.e
-   no Bundle content, only adds control-plane overhead and SHOULD NOT be
-   used as an alternative form of padding.
+   Emitting a Bundle Message with a Length field value that indicates no
+   Bundle content (e.g., a length of 0 if no metadata is present) only
+   adds control-plane overhead and SHOULD NOT be used as an alternative
+   form of padding.
 
-7.2.  Transfer Start Message
+8.2.  Transfer Start Message
 
    The Transfer Start Message is used to indicate the beginning of a new
    multi-segment Bundle Transfer, and encapsulate the first segment.
@@ -532,7 +602,7 @@ Table of Contents
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-7.3.  Transfer Segment Message
+8.3.  Transfer Segment Message
 
    The Transfer Segment Message is used to encapsulate a segment of a
    multi-segment Bundle Transfer.
@@ -567,7 +637,7 @@ Table of Contents
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-7.4.  Transfer Cancel Message
+8.4.  Transfer Cancel Message
 
    The Transfer Cancel Message is used to indicate that the indicated
    Transfer is being aborted, and any prior or later received Segments
@@ -593,7 +663,7 @@ Table of Contents
    field value that does not match the numeric identifier of an
    in-progress (Section 5) Transfer MUST ignore the Message.
 
-7.5.  Definite Padding Message
+8.5.  Definite Padding Message
 
    The Definite Padding Message is used to add padding to a Link-layer
    PDU.
@@ -607,17 +677,18 @@ Table of Contents
    value of zero (0), adding a total of four (4) octets of padding to
    the Link-layer PDU.
 
-7.6.  Indefinite Padding Message
+8.6.  Indefinite Padding Message
 
    An Indefinite Padding Message has a type of zero (0), and in order to
    support padding with a minimum total length of one octet, the Message
    does not include an explicit Length or Content field, and hence has
    the following layout:
 
-    0 1 2 3 4 5 6 7
-   +-+-+-+-+-+-+-+-+
-   | Type          |
-   +-+-+-+-+-+-+-+-+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Type (0)      |                  ... Padding ...              :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    Type:  The type of the Message: zero (0).
 
@@ -630,7 +701,42 @@ Table of Contents
    octet, the non-zero octet is the first octet of the subsequent
    Message.
 
-8.  Security Considerations
+9.  Standard Metadata
+
+   The following Metadata Items are defined in this document:
+
+9.1.  Bundle Length Metadata
+
+   The Bundle Length Metadata Item is used to signal the total length of
+   a bundle that is being transferred in segments.  This allows a
+   receiver to pre-allocate the necessary memory to reassemble the
+   complete bundle.
+
+   This Metadata Item MAY be included in a Transfer Start Message or a
+   Transfer Segment Message.
+
+   The Metadata Item has a Metadata Type of 1, and its layout is as
+   follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Type (1)    |    Length     |  ... Bundle Length ...        :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Length:  The length of the Bundle Length field.  This MUST be one of
+      1, 2, 4, or 8.
+
+   Bundle Length:  The total length of the bundle being transferred,
+      encoded as an unsigned integer in network byte order, with a size
+      corresponding to the Length field.
+
+   A sender SHOULD choose the smallest possible length that can
+   accommodate the total bundle length.  For example, a bundle of 2000
+   octets should be encoded with a Length of 2, and a Value of 2000
+   encoded as a 16-bit unsigned integer.
+
+10.  Security Considerations
 
    This protocol does not define any measures to protect Messages or
    their content.  There may be link-layer mechanisms to protect the
@@ -641,7 +747,7 @@ Table of Contents
    protocol, and lower and/or upper layer mechanisms MUST be used to
    provide security.
 
-9.  Deployment Considerations
+11.  Deployment Considerations
 
    The following caveats should be considered before deploying instances
    of this protocol:
@@ -667,7 +773,9 @@ Table of Contents
        control-plane protocol, or some other mechanism beyond the scope
        of this specification.
 
-10.  IANA Considerations
+12.  IANA Considerations
+
+12.1.  BTPU Message Types Registry
 
    IANA is requested to create a new registry entitled "BTPU Message
    Types", in the existing "Bundle Protocol" registry group.  The
@@ -681,7 +789,7 @@ Table of Contents
    +------------+-------------------------------+
    | 0x70..0x7F | Private Use                   |
    +------------+-------------------------------+
-   | 0x80..0xFF | Reserved for future expansion |
+   | 0xA0..0xFF | Reserved for future expansion |
    +------------+-------------------------------+
 
       Table 1: BTPU Message Types registration
@@ -689,27 +797,96 @@ Table of Contents
 
    The initial values for the registry are:
 
-   +======+==========================================+===============+
-   | Type | Message                                  | Reference     |
-   +======+==========================================+===============+
-   |  0   | Indefinite Padding Message (Section 7.6) | This document |
-   +------+------------------------------------------+---------------+
-   |  1   | Definite Padding Message (Section 7.5)   | This document |
-   +------+------------------------------------------+---------------+
-   |  2   | Bundle Message (Section 7.1)             | This document |
-   +------+------------------------------------------+---------------+
-   |  3   | Transfer Start Message (Section 7.2)     | This document |
-   +------+------------------------------------------+---------------+
-   |  4   | Transfer Segment Message (Section 7.3)   | This document |
-   +------+------------------------------------------+---------------+
-   |  5   | Transfer Cancel Message (Section 7.4)    | This document |
-   +------+------------------------------------------+---------------+
+   +============+==========================================+===========+
+   |    Type    | Message                                  | Reference |
+   +============+==========================================+===========+
+   |     0      | Indefinite Padding Message               | This      |
+   |            | (Section 8.6)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     1      | Definite Padding Message                 | This      |
+   |            | (Section 8.5)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     2      | Bundle Message (Section 8.1)             | This      |
+   |            |                                          | document  |
+   +------------+------------------------------------------+-----------+
+   |     3      | Transfer Start Message                   | This      |
+   |            | (Section 8.2)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     4      | Transfer Segment Message                 | This      |
+   |            | (Section 8.3)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     5      | Transfer Cancel Message                  | This      |
+   |            | (Section 8.4)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     6      | Reserved to avoid clash with             | This      |
+   |            | BPv6                                     | document  |
+   +------------+------------------------------------------+-----------+
+   | 0x80..0x9F | Reserved to avoid clash with             | This      |
+   |            | BPv7 Bundle (CBOR array)                 | document  |
+   +------------+------------------------------------------+-----------+
 
-                Table 2: BTPU Message Types initial values
+                 Table 2: BTPU Message Types initial values
 
-11.  References
+   The initial value of 6 is reserved to ensure that a Link-layer PDU
+   containing a single Bundle Protocol version 6 bundle can be
+   distinguished from BTP-U Messages.
 
-11.1.  Normative References
+12.2.  BTPU Metadata Types Registry
+
+   IANA is requested to create a new registry entitled "BTPU Metadata
+   Types", in the existing "Bundle Protocol" registry group.  The
+   registration procedures for this registry, using terms defined in
+   [RFC8126], is:
+
+   +============+========================+
+   |   Values   | Registration Procedure |
+   +============+========================+
+   |  0..0xBF   | Standards Action       |
+   +------------+------------------------+
+   | 0xC0..0xFF | Private Use            |
+   +------------+------------------------+
+
+         Table 3: BTPU Metadata Types
+            registration policies
+
+   The initial values for the registry are:
+
+   +======+=============================+===============+
+   | Type | Metadata                    | Reference     |
+   +======+=============================+===============+
+   |  0   | Reserved                    | This document |
+   +------+-----------------------------+---------------+
+   |  1   | Bundle Length (Section 9.1) | This document |
+   +------+-----------------------------+---------------+
+
+        Table 4: BTPU Metadata Types initial values
+
+12.3.  BTPU Message Flags Registry
+
+   IANA is requested to create a new registry entitled "BTPU Message
+   Flags", in the existing "Bundle Protocol" registry group.  This
+   registry governs the 4-bit Message Flags field.  The registration
+   procedures for this registry, using terms defined in [RFC8126], is
+   Standards Action.
+
+   The initial values for the registry are:
+
+   +=========+==============+====================+===========+
+   |   Bit   | Name         | Description        | Reference |
+   +=========+==============+====================+===========+
+   | 0 (0x8) | M (Metadata) | Indicates presence | This      |
+   |         |              | of Metadata Items  | document  |
+   +---------+--------------+--------------------+-----------+
+   |   1-3   | Unassigned   |                    |           |
+   +---------+--------------+--------------------+-----------+
+
+            Table 5: BTPU Message Flags initial values
+
+   Bit 0 is the most significant bit.
+
+13.  References
+
+13.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -733,7 +910,7 @@ Table of Contents
               Security (BPSec)", RFC 9172, DOI 10.17487/RFC9172, January
               2022, <https://www.rfc-editor.org/rfc/rfc9172>.
 
-11.2.  Informative References
+13.2.  Informative References
 
    [AOS]      "Advanced Orbiting Systems (AOS) Space Data Link
               Protocol", CCSDS 732.0-B-4, October 2021,
@@ -767,7 +944,7 @@ Table of Contents
 
    [_5G]      3GPP and C. Devaki, "System architecture for the 5G System
               (5GS)", 21 December 2022, <https://www.3gpp.org/ftp/Specs/
-              archive/23_series/23.501/23501-h70.zip>.
+              archive/23_series/23.501/23501-gf0.zip>.
 
 Appendix A.  Examples
 
