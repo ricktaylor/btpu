@@ -233,14 +233,16 @@ Although it is RECOMMENDED that [Transfer Segment Messages](#transfer-segment-me
 
 Message replication is logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and/or erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate Link-layer PDU, it SHOULD be delivered to this protocol only once.
 
-# Message Definitions
+# Message Format
 
 All protocol Messages except the [Indefinite Padding Message](#indefinite-padding-message) follow the common "Type-Length-Value" formatting pattern, with each Message being identified by a four octet header that encodes the type of the Message, and the length of the content of the Message.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Type          | Length (24-bit unsigned integer)              |
+    |     Type      |Flags|      Length (20-bit unsigned int)       |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |              ... Optional Metadata Items ...                  :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                       ... Content ...                         :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -248,11 +250,56 @@ All protocol Messages except the [Indefinite Padding Message](#indefinite-paddin
 Type:
 : The type of the Message, allocated from IANA "BTPU Message Types" registry, see [](#iana-considerations), encoded as a 8-bit unsigned integer in network byte order.
 
+Flags:
+: A 4-bit field for flags, see [](#message-flags).
+
 Length:
-: The length of the Message in octets, excluding the 4 octets of the header itself, encoded as a 24-bit unsigned integer in network byte order.
+: The length of the Message in octets, excluding the 4 octets of the header itself, encoded as a 20-bit unsigned integer in network byte order. This length includes both the optional [Metadata Items](#metadata-items) and the Content.
 
 Content:
-: A sequence of octets of data of variable length determined by the corresponding Length field value, encoded according to the type of the Message.
+: A sequence of octets of data. Its length is the main Message `Length` minus the total length of any present Metadata Items. The content is encoded according to the `Type` of the Message.
+
+## Message Flags {#message-flags}
+
+The Message Flags field is a 4-bit [^2] field, formatted as follows:
+
+     0 1 2 3
+    +-+-+-+-+
+    |M| RFU |
+    +-+-+-+-+
+
+M:
+: The 'M' (Metadata) flag. If this bit is set to 1, it indicates that one or more Metadata Items are present immediately following the Message header.
+
+RFU (Reserved for Future Use):
+: These 3 bits are unassigned. They MUST be set to zero by the sender and MUST be ignored by the receiver.
+
+[^2]: 4 bits is considered enough, as it allows a 20-bit Message Length field, and many additional flags could be better expressed with Metadata Items.
+
+## Metadata Items {#metadata-items}
+
+To allow the transfer of optional additional information, Messages can carry extra information in the form of Metadata Items. Because Messages may be lost in transmission, this metadata provides additional information about the Transfer itself, rather than being particular to the containing Message, and may be repeated in multiple different or repeated Messages.
+
+If the 'M' flag is set in the Message header, the header is followed by one or more Metadata Items. Each item is encoded in a Type-Length-Value format, with a 2-octet header followed by a variable-length value. This format intentionally omits a flags field to prevent nested metadata.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Metadata Type |    Length     |       ... Value ...           :
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Metadata Type:
+: An 8-bit identifier for the Metadata Item, allocated from the "BTPU Metadata Types" IANA registry, see [](#iana-considerations), encoded as a 8-bit unsigned integer in network byte order.
+
+Length:
+: An 8-bit unsigned integer specifying the length of the `Value` field in octets. This limits the value of a single Metadata Item to 255 octets.
+
+Value:
+: The payload of the Metadata Item.
+
+# Message Definitions
+
+The following standard protocol Messages are defined:
 
 ## Bundle Message
 
@@ -260,7 +307,7 @@ The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used b
 
 A Bundle Message has a type of 2. The Message Content MUST be a valid Bundle.
 
-Emitting a Bundle Message with a Length field value of zero (0), i.e no Bundle content, only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+Emitting a Bundle Message with a Length field value that indicates no Bundle content (e.g., a length of 0 if no metadata is present) only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer Start Message
 
@@ -347,10 +394,11 @@ It is valid for this Message to have no content, i.e. a Length field value of ze
 
 An Indefinite Padding Message has a type of zero (0), and in order to support padding with a minimum total length of one octet, the Message does not include an explicit Length or Content field, and hence has the following layout:
 
-     0 1 2 3 4 5 6 7
-    +-+-+-+-+-+-+-+-+
-    | Type          |
-    +-+-+-+-+-+-+-+-+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Type (0)      |                  ... Padding ...              :
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Type:
 : The type of the Message: zero (0).
@@ -358,6 +406,32 @@ Type:
 The Indefinite Padding Message type field is followed by a sequence of zero or more zero (0) octets, ending at the first non-zero octet, or the end of the fixed-length Link-layer PDU.  The content of the Message has no meaning, and MUST be ignored by a receiver.
 
 Note: When a Indefinite Padding Message terminates with a non-zero octet, the non-zero octet is the first octet of the subsequent Message.
+
+# Standard Metadata
+
+The following Metadata Items are defined in this document:
+
+## Bundle Length Metadata
+
+The Bundle Length Metadata Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate the necessary memory to reassemble the complete bundle.
+
+This Metadata Item MAY be included in a Transfer Start Message or a Transfer Segment Message.
+
+The Metadata Item has a Metadata Type of 1, and its layout is as follows:
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |   Type (1)    |    Length     |  ... Bundle Length ...        :
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Length:
+: The length of the `Bundle Length` field. This MUST be one of 1, 2, 4, or 8.
+
+Bundle Length:
+: The total length of the bundle being transferred, encoded as an unsigned integer in network byte order, with a size corresponding to the `Length` field.
+
+A sender SHOULD choose the smallest possible length that can accommodate the total bundle length. For example, a bundle of 2000 octets should be encoded with a `Length` of 2, and a `Value` of 2000 encoded as a 16-bit unsigned integer.
 
 # Security Considerations
 
@@ -375,13 +449,15 @@ The following caveats should be considered before deploying instances of this pr
 
 # IANA Considerations
 
+## BTPU Message Types Registry
+
 IANA is requested to create a new registry entitled "BTPU Message Types", in the existing "Bundle Protocol" registry group.  The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
 
 | Values | Registration Procedure |
-|:-----: |:------ |
+|:-------:|:------ |
 | 0..0x6F | Standards Action |
 | 0x70..0x7F | Private Use |
-| 0x80..0xFF | Reserved for future expansion |
+| 0xA0..0xFF | Reserved for future expansion |
 {: #tab-message-types-reg align="left" title="BTPU Message Types registration policies"}
 
 The initial values for the registry are:
@@ -394,7 +470,43 @@ The initial values for the registry are:
 | 3 | [Transfer Start Message](#transfer-start-message) | This document |
 | 4 | [Transfer Segment Message](#transfer-segment-message) | This document |
 | 5 | [Transfer Cancel Message](#transfer-cancel-message) | This document |
+| 6 | Reserved to avoid clash with BPv6 | This document |
+| 0x80..0x9F | Reserved to avoid clash with BPv7 Bundle (CBOR array) | This document |
 {: #tab-message-types-vals align="left" title="BTPU Message Types initial values"}
+
+The initial value of 6 is reserved to ensure that a Link-layer PDU containing a single Bundle Protocol version 6 bundle can be distinguished from BTP-U Messages.
+
+## BTPU Metadata Types Registry
+
+IANA is requested to create a new registry entitled "BTPU Metadata Types", in the existing "Bundle Protocol" registry group. The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
+
+| Values | Registration Procedure |
+|:-------:|:------ |
+| 0..0xBF | Standards Action |
+| 0xC0..0xFF | Private Use |
+{: #tab-metadata-types-reg align="left" title="BTPU Metadata Types registration policies"}
+
+The initial values for the registry are:
+
+| Type | Metadata | Reference |
+|:------:|:-----|:------|
+| 0 | Reserved | This document |
+| 1 | [Bundle Length](#bundle-length-metadata) | This document |
+{: #tab-metadata-types-vals align="left" title="BTPU Metadata Types initial values"}
+
+## BTPU Message Flags Registry
+
+IANA is requested to create a new registry entitled "BTPU Message Flags", in the existing "Bundle Protocol" registry group. This registry governs the 4-bit Message Flags field. The registration procedures for this registry, using terms defined in {{!RFC8126}}, is Standards Action.
+
+The initial values for the registry are:
+
+| Bit | Name | Description | Reference |
+|:---:|:-----|:------|:------|
+| 0 (0x8) | M (Metadata) | Indicates presence of Metadata Items | This document |
+| 1-3 | Unassigned | | |
+{: #tab-message-flags-vals align="left" title="BTPU Message Flags initial values"}
+
+Bit 0 is the most significant bit.
 
 --- back
 
