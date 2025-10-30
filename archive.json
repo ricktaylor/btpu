@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-10-28T00:31:20.597778+00:00",
+  "timestamp": "2025-10-30T00:33:17.840686+00:00",
   "repo": "ricktaylor/btpu",
   "labels": [
     {
@@ -49,6 +49,54 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDONqGLE87Ug9Nw",
+      "title": "How to define number of metadata items in a message ?",
+      "url": "https://github.com/ricktaylor/btpu/issues/1",
+      "state": "OPEN",
+      "author": "EpicKiwi",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 7.2 says that\n\n> If the 'M' flag is set in the Message header, the header is followed by one or more Metadata Items.\n\nSo 'M' flags indicates us if there is metadata items or not. But I can't find a way to compute the number of metadata items in a message. How to know if there is a second metadata item after the first or if it is the beginning of message content ? Maybe I'm missing something.",
+      "createdAt": "2025-10-29T10:56:34Z",
+      "updatedAt": "2025-10-29T10:56:34Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 2,
+      "id": "I_kwDONqGLE87UhFim",
+      "title": "Metadata field may increase protocol complexity",
+      "url": "https://github.com/ricktaylor/btpu/issues/2",
+      "state": "OPEN",
+      "author": "EpicKiwi",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Last commits includes metadata items in every message used for transmission.\nCurrently, only a single metadata type is defined (the \"Bundle Length Metadata Item\").\nIn my opinion, this optional information could be included in message content of a \"Transfert Start\" message without adding more complexity of every message in the whole protocol.\n\nIncreasing complexity means a lot more combination case to take into account during parsing.\nAnd some weird combinations like having a \"Bundle Length Metadata Item\" into a \"Transfert Cancel\" message.",
+      "createdAt": "2025-10-29T11:05:34Z",
+      "updatedAt": "2025-10-29T14:44:08Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "ricktaylor",
+          "authorAssociation": "OWNER",
+          "body": "That wasn't what I was trying to mandate.\n\nAll metadata items are optional - think of them as hints that MAY be added (if the flag is set).\n\nBut I understand your underlying point... the generic \"here are some hints\" mechanism is more complex than adding a \"length\" filed to the Transfer Start.\n\nHowever, what if there is an out of order delivery?  It is entirely possible for the Transfer Start message to be lost and then retransmitted... perhaps a sender might include a Total Length hint in every 3rd segment?",
+          "createdAt": "2025-10-29T13:18:03Z",
+          "updatedAt": "2025-10-29T13:18:03Z"
+        },
+        {
+          "author": "EpicKiwi",
+          "authorAssociation": "NONE",
+          "body": "I write this issue mainly for discussing about this topic, not because I strongly think that we should not include metadata into messages.\n\nI'm totally fine with having hints on some messages. And I think it's a good idea to give hints to help receiver collect data as fluently as possible.\n\nHints could be included in Transfer Start or Transfer Segment messages (for example) **content part** and leave every other messages without any mention of metadata. Those hints could be optional with the same mechanism as the one used by metadata in current state of the protocol. A flag or a length describing \"metadata part\".\n\n**Potential drawback I see**: It increase the size of every messages that may contains metadata (even those with no metadata field) since we may include a flag field or a length field. But, message's length field is longer and can describe bigger messages since we don't make use of 4 bits from length field to code flags.",
+          "createdAt": "2025-10-29T14:44:08Z",
+          "updatedAt": "2025-10-29T14:44:08Z"
+        }
+      ]
+    }
+  ],
   "pulls": []
 }
