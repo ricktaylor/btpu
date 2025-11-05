@@ -4,8 +4,8 @@
 
 Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                         21 October 2025
-Expires: 24 April 2026
+Intended status: Standards Track                         5 November 2025
+Expires: 9 May 2026
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 April 2026.
+   This Internet-Draft will expire on 9 May 2026.
 
 Copyright Notice
 
