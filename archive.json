@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-11-04T00:32:29.905019+00:00",
+  "timestamp": "2025-11-06T00:32:50.550603+00:00",
   "repo": "ricktaylor/btpu",
   "labels": [
     {
@@ -55,16 +55,24 @@
       "id": "I_kwDONqGLE87Ug9Nw",
       "title": "How to define number of metadata items in a message ?",
       "url": "https://github.com/ricktaylor/btpu/issues/1",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "EpicKiwi",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Section 7.2 says that\n\n> If the 'M' flag is set in the Message header, the header is followed by one or more Metadata Items.\n\nSo 'M' flags indicates us if there is metadata items or not. But I can't find a way to compute the number of metadata items in a message. How to know if there is a second metadata item after the first or if it is the beginning of message content ? Maybe I'm missing something.",
       "createdAt": "2025-10-29T10:56:34Z",
-      "updatedAt": "2025-10-29T10:56:34Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2025-11-05T14:36:45Z",
+      "closedAt": "2025-11-05T14:36:45Z",
+      "comments": [
+        {
+          "author": "ricktaylor",
+          "authorAssociation": "OWNER",
+          "body": "I have added an extra bit flag to each metadata item (now called Hint Item), to indicate if there is another Hint following.  This should fix the issue",
+          "createdAt": "2025-11-05T14:36:45Z",
+          "updatedAt": "2025-11-05T14:36:45Z"
+        }
+      ]
     },
     {
       "number": 2,
