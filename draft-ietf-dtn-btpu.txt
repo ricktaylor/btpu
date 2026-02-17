@@ -377,8 +377,11 @@ Table of Contents
    size of the Transfer Window MUST be considered Section 4.2.  Because
    of Transfer number roll-over, half the number space of 2^32 and
    window size is used to determine if a number is older or newer than
-   the latest Transfer number.  Pseudocode for the algorithm is given in
-   Figure 2.
+   the latest Transfer number.  This margin allows a receiver that has
+   experienced a temporary loss of signal to correctly resume
+   processing, distinguishing genuinely new Transfers from those that
+   have wrapped around the number space and are obsolete.  Pseudocode
+   for the algorithm is given in Figure 2.
 
    The size of the Transfer Window SHOULD be the same at the sender and
    all receivers, and MUST be configured via some out-of-band mechanism.
