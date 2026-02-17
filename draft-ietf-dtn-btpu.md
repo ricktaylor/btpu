@@ -1,7 +1,7 @@
 ---
 
-title: "Bundle Transfer Protocol - Unidirectional"
-abbrev: "BTPU"
+title: Bundle Transfer Protocol - Unidirectional
+abbrev: BTPU
 category: std
 
 docname: draft-ietf-dtn-btpu-latest
@@ -11,7 +11,7 @@ date:
 consensus: true
 v: 3
 area: INT
-workgroup: "Delay/Disruption Tolerant Networking"
+workgroup: Delay/Disruption Tolerant Networking
 
 keyword:
 
@@ -26,34 +26,34 @@ author:
   email: rtaylor@aalyria.com
 
 venue:
-  group: "Delay/Disruption Tolerant Networking"
-  type: "Working Group"
-  mail: "dtn@ietf.org"
-  arch: "https://mailarchive.ietf.org/arch/browse/dtn/"
-  github: "ricktaylor/btpu"
-  latest: "https://ricktaylor.github.io/btpu/draft-ietf-dtn-btpu.html"
+  group: Delay/Disruption Tolerant Networking
+  type: Working Group
+  mail: dtn@ietf.org
+  arch: https://mailarchive.ietf.org/arch/browse/dtn/
+  github: ricktaylor/btpu
+  latest: https://ricktaylor.github.io/btpu/draft-ietf-dtn-btpu.html
 
 normative:
 
 informative:
   USLP:
-    target: https://public.ccsds.org/Pubs/732x1b3e1.pdf
+    target: https://ccsds.org/Pubs/732x1b3e1.pdf
     title: Unified Space Data Link Protocol (USLP)
     date: 2024-06
     seriesinfo:
-      "CCSDS": "732.1-B-3"
+      CCSDS: 732.1-B-3
   TM:
-    target: https://public.ccsds.org/Pubs/132x0b3.pdf
+    target: https://ccsds.org/Pubs/132x0b3.pdf
     title: Telemetry (TM) Space Data Link Protocol
     date: 2021-10
     seriesinfo:
-      "CCSDS": "132.0-B-3"
+      CCSDS: 132.0-B-3
   AOS:
-    target: https://public.ccsds.org/Pubs/132x0b3.pdf
+    target: https://ccsds.org/Pubs/732x0b4.pdf
     title: Advanced Orbiting Systems (AOS) Space Data Link Protocol
     date: 2021-10
     seriesinfo:
-      "CCSDS": "732.0-B-4"
+      CCSDS: 732.0-B-4
   DVB-S2X:
     target: https://www.etsi.org/deliver/etsi_en/302300_302399/30230702/01.04.01_60/en_30230702v010401p.pdf
     title: >
@@ -65,7 +65,7 @@ informative:
       Part 2: DVB-S2 Extensions (DVB-S2X)
     date: 2024-08
     seriesinfo:
-      "ETSI": "EN 302 307-2"
+      ETSI: EN 302 307-2
   5G: 3GPP.23.501
   IEEE.802.3: DOI.10.1109/IEEESTD.2022.9844436
 
@@ -86,10 +86,10 @@ Bundle Protocol version 7 (BPv7) is defined in terms a layered logical architect
 In the realm of near- and deep-space communication there are a number of standardized link-layer protocols, including {{USLP}}, {{TM}}, {{AOS}}, {{DVB-S2X}}, that share a set of common properties:
 
 - They are unidirectional: data transfer occurs in one direction only, there is no in-band return path for data.
-- They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to a receiver in its entirety or not at all. Frames may be of fixed or variable length.
+- They are frame-based: the link-layer protocol will guarantee that a frame of data is either delivered to a receiver in its entirety or not at all. Frames can be of fixed or variable length.
 - They provide a single logical channel: the communication between a sender and one or more receivers of frames can be logically separated from other communication over the link-layer by an implementation, perhaps by the use of channel identifiers, circuit identifiers, or tuples of source and destination address information.
 
-These characteristics provide a common baseline that allows the definition of a lightweight mechanism for transferring BPv7 bundles meeting the requirements of a BPv7 Convergence Layer Protocol, and this document describes such a protocol: Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.  The protocol is applicable to other link-layer technologies which share these characteristics beyond those commonly used for space communication, for example 5G Unstructured PDUs {{5G}}, or Ethernet {{IEEE.802.3}}, without requiring underlying IP services.  Although designed for any link-layer protocol that shares the characteristics above, additional specification or profiling may be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
+These characteristics provide a common baseline that allows the definition of a lightweight mechanism for transferring BPv7 bundles meeting the requirements of a BPv7 Convergence Layer Protocol, and this document describes such a protocol: Bundle Transfer Protocol - Unidirectional (BTPU), suitable for implementation over any link-layer protocol that shares these characteristics.  The protocol is applicable to other link-layer technologies which share these characteristics beyond those commonly used for space communication, for example 5G Unstructured PDUs {{5G}}, or Ethernet {{IEEE.802.3}}, without requiring underlying IP services.  Although designed for any link-layer protocol that shares the characteristics above, additional specification or profiling might be required to map the constructs of the link-layer protocol to the mechanisms defined in this specification.
 
     +----------------------+
     |  DTN Application     |
@@ -122,7 +122,7 @@ Message:
 : A single protocol data item, see [](#message-definitions).
 
 Segment:
-: In order to transfer a Bundle larger than a Link-layer PDU, Bundles may be subdivided into Segments in order to fit within a Link-layer PDU, see [](#transfers).
+: In order to transfer a Bundle larger than a Link-layer PDU, Bundles can be subdivided into Segments in order to fit within a Link-layer PDU, see [](#transfers).
 
 Transfer:
 : The context in which the transmission of the Segments of a single Bundle occurs, see [](#transfers).
@@ -131,13 +131,13 @@ Transfer:
 
 The purpose of the protocol is to transfer a series of Bundles between two nodes. Because a Bundle is of variable length, which is unlikely to be exactly the same size as a Link-layer PDU, the protocol defines a mechanism to divide Bundles into Segments as required, such that each Link-layer PDU is efficiently filled with data, and one or more Bundles can be transferred in a minimal number of Link-layer PDUs, described in more detail in [](#transfers).
 
-This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation may be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
+This segmentation is unrelated to BPv7 bundle fragmentation as defined in {{Section 5.8 of RFC9171}}.  Although BPv7 bundle fragmentation can be used to sub-divide oversized BPv7 bundles, the required duplication of metadata blocks can result in inefficiencies or fail to generate BPv7 bundle fragment small enough to fit in a single Link-layer PDU.
 
-As a sender may prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles may interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.  The bundle transfers are expected to occur over the same logical channel, rather than using a separate channel for each bundle or group of bundles that share priority.  This does not preclude using multiple logical channels, but each channel is expected to be an independent instance of the protocol.
+As a sender can prioritize the transfer of each Bundle differently, the protocol allows for the multiplexing of Bundle transfers, so that the transfer of higher priority Bundles can interrupt the transfer of other Bundles, avoiding "head of line blocking", see [](#interleaving-transfers) for more detail.  The bundle transfers are expected to occur over the same logical channel, rather than using a separate channel for each bundle or group of bundles that share priority.  This does not preclude using multiple logical channels, but each channel is expected to be an independent instance of the protocol.
 
 ## Messages
 
-The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The sender is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages is the logical control-plane used by the protocol.  This document uses the verb "emit" to describe to the writing of a new Message to a Link-layer PDU ready for transmission, to differentiate from the the transmission of the Link-layer PDU itself, as many Messages may emitted prior to the transmission of the containing PDU.
+The basic primitive of the protocol is the Message, a self-describing unit of protocol control information of variable length. The sender is responsible for composing one or more Messages as required, and packing them into a Link-layer PDU, such that a single PDU is optimally filled.  The receiving node parses the contained Messages from each received Link-layer PDU, and then processes them as individual control signals.  This sequence of Messages is the logical control-plane used by the protocol.  This document uses the verb "emit" to describe to the writing of a new Message to a Link-layer PDU ready for transmission, to differentiate from the the transmission of the Link-layer PDU itself, as many Messages can be emitted prior to the transmission of the containing PDU.
 
 See [](#message-definitions) for detail of each type of Message.
 
@@ -147,7 +147,7 @@ Because the size of a Bundle is not expected to exactly match the size of a Link
 
 It is RECOMMENDED that implementations use the Definite Padding Message to add padding to a Link-layer PDU, except when less than four octets of padding are required, as the minimum length of the Definite Padding Message is four octets.
 
-When the link-layer protocol provides variable length Link-layer PDUs, implementations SHOULD take into account the mechanisms used by the link-layer protocol to support variable length Link-layer PDUs, and emit Link-layer PDUs of a suitable size for the underlying protocol. For example, if variable length Link-layer PDUs are implemented by the link-layer protocol using a sub-framing mechanism, then emitting Link-layer PDUs of a single, or whole number of sub-frames may increase reliability.
+When the link-layer protocol provides variable length Link-layer PDUs, implementations SHOULD take into account the mechanisms used by the link-layer protocol to support variable length Link-layer PDUs, and emit Link-layer PDUs of a suitable size for the underlying protocol. For example, if variable length Link-layer PDUs are implemented by the link-layer protocol using a sub-framing mechanism, then emitting Link-layer PDUs of a single, or whole number of sub-frames can increase reliability.
 
 The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is an implementation matter.
 
@@ -155,15 +155,15 @@ The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is 
 
 As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, if a complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the [Bundle Message](#bundle-message).
 
-Each Segment is assigned a monotonically decreasing integral Segment Index that indicates the relative position of the Segment within the total sequence of Segments, with zero (0) indicating the final segment; i.e Segments are ordered N to 0, where N is the Segment Index in the Transfer Start Message.
+Each Segment is assigned a monotonically increasing integral Segment Index that indicates the relative position of the Segment within the total sequence of Segments, with zero (0) indicating the first segment; i.e. Segments are ordered 0 to N, where N is the Segment Index in the Transfer End Message.
 
-The start of a transfer of a sequence of Segments MUST be indicated by emitting a [Transfer Start Message](#transfer-start-message), including the index of the first Segment and the identifier of the Transfer that is now complete.  The remaining Segments of a Bundle MUST be emitted by the sender as a series of [Transfer Segment Messages](#transfer-segment-message) carrying the same Transfer identifier.
+The Segments of a Bundle MUST be emitted by the sender as a series of [Transfer Segment Messages](#transfer-segment-message) carrying the same Transfer identifier, starting with Segment Index zero (0).  The end of a transfer MUST be indicated by emitting a [Transfer End Message](#transfer-end-message), including the index and data of the final Segment.
 
 In addition to a Segment Index, every Segment is associated with a Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.
 
 Transfer numbers are expressed as 32-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" to zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
-A receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the descending order of their Segment Index.  Once all the Segments have been received and concatenated, a receiver is expected to pass the recombined Bundle to an upper layer for further processing.
+A receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the ascending order of their Segment Index.  The Segment Index in the Transfer End Message indicates the final Segment Index (N); a transfer is complete when Segments with indices 0 through N have been received.  Once all the Segments have been received and concatenated, a receiver is expected to pass the recombined Bundle to an upper layer for further processing.
 
 ## Interleaving Transfers
 
@@ -171,11 +171,11 @@ In order to support the transmission of Bundles with different priorities, Trans
 
 ## Cancelling Transfers {#cancelled}
 
-A Transfer may be aborted by the sender while a Transfer is in progress by the emitting of a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A receiver of a Transfer Cancel Message SHOULD discard any segments already received and MUST ignore any further Messages associated with the Transfer.
+A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A receiver of a Transfer Cancel Message SHOULD discard any segments already received and MUST ignore any further Messages associated with the Transfer.
 
 # Transfer Window {#transfer-window}
 
-Because Messages may be lost in transmission due to the loss of Link-layer PDUs, and a sender may emit duplicate Messages as a defense against loss, see [](#repetition), a sender MUST maintain a sliding Transfer Window that defines the maximum number of Transfers that can be simultaneously in progress.  As Transfers are identified by a monotonically increasing number, the size of the Transfer Window also strictly defines the range of identifiers of Transfers in progress.
+Because Messages can be lost in transmission due to the loss of Link-layer PDUs, and a sender MAY emit duplicate Messages as a defense against loss, see [](#repetition), a sender MUST maintain a sliding Transfer Window that defines the maximum number of Transfers that can be simultaneously in progress.  As Transfers are identified by a monotonically increasing number, the size of the Transfer Window also strictly defines the range of identifiers of Transfers in progress.
 
 The sender MUST maintain a reference to the greatest Transfer number used in any emitted Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
@@ -221,17 +221,17 @@ The size of the Transfer Window SHOULD be the same at the sender and all receive
 
 # Handling Link-layer PDU Loss {#repetition}
 
-Due to the unreliable nature of the link-layer protocol, Link-layer PDUs may be lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Messages.
+Due to the unreliable nature of the link-layer protocol, Link-layer PDUs can be lost in transmission, resulting in the loss of the contained Messages.  Because the underlying link-layer is assumed to be unidirectional, the protocol does not include a mechanism to trigger the retransmission of lost Messages; instead the protocol allows the sender to repeat the transmission of Messages.
 
-A sender MAY emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted may contain different Messages, any repeated Message MUST be an exact copy of an already emitted Message.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers may repeat Messages differently.
+A sender MAY emit any Message multiple times in different Link-layer PDUs.  Although every Link-layer PDU transmitted MAY contain different Messages, any repeated Message MUST be an exact copy of an already emitted Message.  A receiver MAY ignore any duplicate Message already received for an in-progress Transfer.  When segmenting bundles, not all Messages in a Transfer need be repeated the same number of times, and different Transfers can repeat Messages differently.
 
-Although it is RECOMMENDED that [Transfer Segment Messages](#transfer-segment-message) are emitted in descending order of Segment Index; once emitted, any Message MAY be repeated any number of times, in any order.  The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:
+Although it is RECOMMENDED that segments are emitted in ascending order of Segment Index; once emitted, any Message MAY be repeated any number of times, in any order.  The number of repetitions of a particular Message is an implementation matter that can be influenced by many factors, including:
 
-- Offline analysis of the deployed environment may require a certain amount of Message repetition to reach some required certainty of transfer.
-- A higher 'reliability' factor associated with a particular Bundle may result in more copies of each associated Transfer Message being emitted.
-- Signalling from the link-layer protocol, or some other out-of-band mechanism, may trigger increased repetition of a subset Messages, to protect against some temporary spike in Link-layer PDU loss rate.
+- Offline analysis of the deployed environment might require a certain amount of Message repetition to reach some required certainty of transfer.
+- A higher 'reliability' factor associated with a particular Bundle could result in more copies of each associated Transfer Message being emitted.
+- Signalling from the link-layer protocol, or some other out-of-band mechanism, might trigger increased repetition of a subset of Messages, to protect against some temporary spike in Link-layer PDU loss rate.
 
-Message replication is logically separate from any facilities the underlying link-layer protocol may have to protect against information loss through redundancy and/or erasure coding, and may be used as required by a deployment.  If a link-layer protocol receives a duplicate Link-layer PDU, it SHOULD be delivered to this protocol only once.
+Message replication is logically separate from any facilities the underlying link-layer protocol might have to protect against information loss through redundancy and/or erasure coding, and MAY be used as required by a deployment.  If a link-layer protocol receives a duplicate Link-layer PDU, it SHOULD be delivered to this protocol only once.
 
 # Message Format
 
@@ -240,9 +240,9 @@ All protocol Messages except the [Indefinite Padding Message](#indefinite-paddin
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |     Type      |Flags|      Length (20-bit unsigned int)       |
+    |     Type      | Flags |    Length (20-bit unsigned int)       |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |              ... Optional Metadata Items ...                  :
+    |                 ... Optional Hint Items ...                   :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                       ... Content ...                         :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -254,10 +254,10 @@ Flags:
 : A 4-bit field for flags, see [](#message-flags).
 
 Length:
-: The length of the Message in octets, excluding the 4 octets of the header itself, encoded as a 20-bit unsigned integer in network byte order. This length includes both the optional [Metadata Items](#metadata-items) and the Content.
+: The length of the Message in octets, excluding the 4 octets of the header itself, encoded as a 20-bit unsigned integer in network byte order. This length includes both the optional [Hint Items](#hint-items) and the Content.
 
 Content:
-: A sequence of octets of data. Its length is the main Message `Length` minus the total length of any present Metadata Items. The content is encoded according to the `Type` of the Message.
+: A sequence of octets of data. Its length is the main Message `Length` minus the total length of any present Hint Items. The content is encoded according to the `Type` of the Message.
 
 ## Message Flags {#message-flags}
 
@@ -265,37 +265,40 @@ The Message Flags field is a 4-bit [^2] field, formatted as follows:
 
      0 1 2 3
     +-+-+-+-+
-    |M| RFU |
+    |H| RFU |
     +-+-+-+-+
 
-M:
-: The 'M' (Metadata) flag. If this bit is set to 1, it indicates that one or more Metadata Items are present immediately following the Message header.
+H:
+: The 'H' (Hint) flag. If this bit is set to 1, it indicates that one or more Hint Items are present immediately following the Message header.
 
 RFU (Reserved for Future Use):
 : These 3 bits are unassigned. They MUST be set to zero by the sender and MUST be ignored by the receiver.
 
-[^2]: 4 bits is considered enough, as it allows a 20-bit Message Length field, and many additional flags could be better expressed with Metadata Items.
+[^2]: 4 bits is considered enough, as it allows a 20-bit Message Length field, and many additional flags could be better expressed with Hint Items.
 
-## Metadata Items {#metadata-items}
+## Hint Items {#hint-items}
 
-To allow the transfer of optional additional information, Messages can carry extra information in the form of Metadata Items. Because Messages may be lost in transmission, this metadata provides additional information about the Transfer itself, rather than being particular to the containing Message, and may be repeated in multiple different or repeated Messages.
+To allow the transfer of optional additional information, Messages can carry extra information in the form of Hint Items. Because Messages can be lost in transmission, this metadata provides additional information about the Transfer itself, rather than being particular to the containing Message, and MAY be repeated in multiple different or repeated Messages.
 
-If the 'M' flag is set in the Message header, the header is followed by one or more Metadata Items. Each item is encoded in a Type-Length-Value format, with a 2-octet header followed by a variable-length value. This format intentionally omits a flags field to prevent nested metadata.
+If the 'H' flag is set in the Message header, the header is followed by one or more Hint Items. Each item is encoded in a Type-Length-Value format, with a 2-octet header followed by a variable-length value. This format intentionally omits a flags field to prevent nested metadata.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Metadata Type |    Length     |       ... Value ...           :
+    | Hint Type   |H|    Length     |       ... Value ...           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Metadata Type:
-: An 8-bit identifier for the Metadata Item, allocated from the "BTPU Metadata Types" IANA registry, see [](#iana-considerations), encoded as a 8-bit unsigned integer in network byte order.
+Hint Type:
+: A 7-bit identifier for the Hint Item, allocated from the "BTPU Hint Types" IANA registry, see [](#iana-considerations), encoded as a 7-bit unsigned integer in network byte order.
+
+H:
+: The 'H' (Hint) flag. If this bit is set to 1, it indicates that another Hint Item immediately follows this Hint Item.  If this bit is set to 0, then the Message content immediately follows the Hint Item.
 
 Length:
-: An 8-bit unsigned integer specifying the length of the `Value` field in octets. This limits the value of a single Metadata Item to 255 octets.
+: An 8-bit unsigned integer specifying the length of the `Value` field in octets. This limits the value of a single Hint Item to 255 octets.
 
 Value:
-: The payload of the Metadata Item.
+: The payload of the Hint Item.
 
 # Message Definitions
 
@@ -309,38 +312,11 @@ A Bundle Message has a type of 2. The Message Content MUST be a valid Bundle.
 
 Emitting a Bundle Message with a Length field value that indicates no Bundle content (e.g., a length of 0 if no metadata is present) only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
-## Transfer Start Message
-
-The Transfer Start Message is used to indicate the beginning of a new multi-segment Bundle Transfer, and encapsulate the first segment.
-
-A Transfer Start Message has a type of 3. The Message Content field is formatted as follows:
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Transfer Number                                               |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Segment Index                                                 |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                    ... Segment Data ...                       :
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Transfer Number:
-: The numeric identifier of the [in-progress](#transfer-window) Transfer that is beginning, encoded as a 32-bit unsigned integer in network byte order.
-
-Segment Index:
-: The non-zero Segment Index of the first Segment, encoded as a 32-bit unsigned integer in network byte order.
-
-Segment Data:
-: The octets of the first Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Index.
-
-Transfer Start Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
-
 ## Transfer Segment Message
 
 The Transfer Segment Message is used to encapsulate a segment of a multi-segment Bundle Transfer.
 
-A Transfer Segment Message has a type of 4. The Message Content field is formatted as follows:
+A Transfer Segment Message has a type of 3. The Message Content field is formatted as follows:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -362,6 +338,33 @@ Segment Data:
 : The octets of a Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Index.
 
 Transfer Segment Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+
+## Transfer End Message
+
+The Transfer End Message is used to indicate the completion of a multi-segment Bundle Transfer, and encapsulate the final segment.
+
+A Transfer End Message has a type of 4. The Message Content field is formatted as follows:
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Transfer Number                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Segment Index                                                 |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    ... Segment Data ...                       :
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Transfer Number:
+: The numeric identifier of the [in-progress](#transfer-window) Transfer that is completing, encoded as a 32-bit unsigned integer in network byte order.
+
+Segment Index:
+: The Segment Index of the final Segment, encoded as a 32-bit unsigned integer in network byte order.
+
+Segment Data:
+: The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Index.
+
+Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
 
 ## Transfer Cancel Message
 
@@ -405,24 +408,24 @@ Type:
 
 The Indefinite Padding Message type field is followed by a sequence of zero or more zero (0) octets, ending at the first non-zero octet, or the end of the fixed-length Link-layer PDU.  The content of the Message has no meaning, and MUST be ignored by a receiver.
 
-Note: When a Indefinite Padding Message terminates with a non-zero octet, the non-zero octet is the first octet of the subsequent Message.
+Note: When an Indefinite Padding Message terminates with a non-zero octet, the non-zero octet is the first octet of the subsequent Message.
 
-# Standard Metadata
+# Standard Hint Items
 
-The following Metadata Items are defined in this document:
+The following Hint Items are defined in this document:
 
-## Bundle Length Metadata
+## Bundle Length Hint
 
-The Bundle Length Metadata Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate the necessary memory to reassemble the complete bundle.
+The Bundle Length Hint Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate the necessary memory to reassemble the complete bundle.
 
-This Metadata Item MAY be included in a Transfer Start Message or a Transfer Segment Message.
+This Hint Item MAY be included in a Transfer Segment Message or a Transfer End Message. Receivers SHOULD ignore this Hint Item if encountered in other message types.
 
-The Metadata Item has a Metadata Type of 1, and its layout is as follows:
+The Hint Item has a Hint Type of 0, and its layout is as follows:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |   Type (1)    |    Length     |  ... Bundle Length ...        :
+    |   Type (0)  |H|    Length     |  ... Bundle Length ...        :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Length:
@@ -435,15 +438,15 @@ A sender SHOULD choose the smallest possible length that can accommodate the tot
 
 # Security Considerations
 
-This protocol does not define any measures to protect Messages or their content.  There may be link-layer mechanisms to protect the transmission of frames against over-hearing and interference, and upper layer mechanisms, such as BPSec defined in {{!RFC9172}}, can be used to provide integrity and protection at a higher layer.  Therefore transport-layer security is considered out of scope for the protocol, and lower and/or upper layer mechanisms MUST be used to provide security.
+This protocol does not define any measures to protect Messages or their content.  There might be link-layer mechanisms to protect the transmission of frames against over-hearing and interference, and upper layer mechanisms, such as BPSec defined in {{!RFC9172}}, can be used to provide integrity and protection at a higher layer.  Therefore transport-layer security is considered out of scope for the protocol, and lower and/or upper layer mechanisms MUST be used to provide security.
 
 # Deployment Considerations
 
-The following caveats should be considered before deploying instances of this protocol:
+The following caveats are to be considered before deploying instances of this protocol:
 
-1. It is unreliable. Although there may be a link-layer protocol mechanism for a receiver to be notified that a frame has been lost in transmission, due to the unidirectional nature of the link-layer there is no in-band return path suitable for higher-layer acknowledgement of transfer success.  Any acknowledgement system designed to provide reliability MUST use a logically separate path from receiver back to sender.
+1. It is unreliable. Although there might be a link-layer protocol mechanism for a receiver to be notified that a frame has been lost in transmission, due to the unidirectional nature of the link-layer there is no in-band return path suitable for higher-layer acknowledgement of transfer success.  Any acknowledgement system designed to provide reliability MUST use a logically separate path from receiver back to sender.
 
-1. It does not provide congestion control or signalling. The underlying link-layer is expected to provide an uncontested channel between sender and receivers, and hence such mechanisms are considered to be out of scope. The protocol MUST NOT be deployed in environments where congestion may occur, such as the public Internet, when the underlying link-layer does not provide suitable congestion control.
+1. It does not provide congestion control or signalling. The underlying link-layer is expected to provide an uncontested channel between sender and receivers, and hence such mechanisms are considered to be out of scope. The protocol MUST NOT be deployed in environments where congestion might occur, such as the public Internet, when the underlying link-layer does not provide suitable congestion control.
 
 1. It requires an out-of-band mechanism for configuration. This can either be via pre-placed static configuration, a parallel dynamic control-plane protocol, or some other mechanism beyond the scope of this specification.
 
@@ -467,8 +470,8 @@ The initial values for the registry are:
 | 0 | [Indefinite Padding Message](#indefinite-padding-message)  | This document |
 | 1 | [Definite Padding Message](#definite-padding-message)  | This document |
 | 2 | [Bundle Message](#bundle-message) | This document |
-| 3 | [Transfer Start Message](#transfer-start-message) | This document |
-| 4 | [Transfer Segment Message](#transfer-segment-message) | This document |
+| 3 | [Transfer Segment Message](#transfer-segment-message) | This document |
+| 4 | [Transfer End Message](#transfer-end-message) | This document |
 | 5 | [Transfer Cancel Message](#transfer-cancel-message) | This document |
 | 6 | Reserved to avoid clash with BPv6 | This document |
 | 0x80..0x9F | Reserved to avoid clash with BPv7 Bundle (CBOR array) | This document |
@@ -476,23 +479,24 @@ The initial values for the registry are:
 
 The initial value of 6 is reserved to ensure that a Link-layer PDU containing a single Bundle Protocol version 6 bundle can be distinguished from BTP-U Messages.
 
-## BTPU Metadata Types Registry
+## BTPU Hint Types Registry
 
-IANA is requested to create a new registry entitled "BTPU Metadata Types", in the existing "Bundle Protocol" registry group. The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
+IANA is requested to create a new registry entitled "BTPU Hint Types", in the existing "Bundle Protocol" registry group. The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
+
+Specifications defining new Hint Types MUST specify which Message types the Hint is applicable to, and SHOULD specify receiver behavior when the Hint is encountered in other Message types.
 
 | Values | Registration Procedure |
 |:-------:|:------ |
-| 0..0xBF | Standards Action |
-| 0xC0..0xFF | Private Use |
-{: #tab-metadata-types-reg align="left" title="BTPU Metadata Types registration policies"}
+| 0..0x6F | Standards Action |
+| 0x70..0x7F | Private Use |
+{: #tab-metadata-types-reg align="left" title="BTPU Hint Types registration policies"}
 
 The initial values for the registry are:
 
-| Type | Metadata | Reference |
+| Type | Hint | Reference |
 |:------:|:-----|:------|
-| 0 | Reserved | This document |
-| 1 | [Bundle Length](#bundle-length-metadata) | This document |
-{: #tab-metadata-types-vals align="left" title="BTPU Metadata Types initial values"}
+| 0 | [Bundle Length](#bundle-length-hint) | This document |
+{: #tab-metadata-types-vals align="left" title="BTPU Hint Types initial values"}
 
 ## BTPU Message Flags Registry
 
@@ -502,7 +506,7 @@ The initial values for the registry are:
 
 | Bit | Name | Description | Reference |
 |:---:|:-----|:------|:------|
-| 0 (0x8) | M (Metadata) | Indicates presence of Metadata Items | This document |
+| 0 (0x8) | H (Hint) | Indicates presence of Hint Items | This document |
 | 1-3 | Unassigned | | |
 {: #tab-message-flags-vals align="left" title="BTPU Message Flags initial values"}
 
@@ -512,7 +516,7 @@ Bit 0 is the most significant bit.
 
 # Examples
 
-The following sections has examples of an implementation emitting Bundles into Link-layer PDUs.  Although the examples demonstrate the core principles, for example Bundle Segmentation with priority, the algorithm used to pack Messages into Link-layer PDUs is just for example purposes.  An implementation may use an alternate algorithm that meets this specification but suits its overall architecture, and where this is applicable is noted in each example.
+The following sections has examples of an implementation emitting Bundles into Link-layer PDUs.  Although the examples demonstrate the core principles, for example Bundle Segmentation with priority, the algorithm used to pack Messages into Link-layer PDUs is just for example purposes.  An implementation can use an alternate algorithm that meets this specification but suits its overall architecture, and where this is applicable is noted in each example.
 
 ## Segmentation of a sequence of Bundles of equal priority
 
@@ -596,5 +600,6 @@ An example of the transmission of two Bundles of differing required repetition i
 Bundle A is required by some higher-layer loss protection policy to be repeated twice in two separate Link-layer PDUs.  Bundle A does not require additional loss protection, and can therefore be transmitted once.  As Bundle A can fit in its entirety in a single Link-layer PDU, it is emitted as a Complete Bundle Message, with Bundle B emitted as a Segment Messages sized to fill the remainder of each PDU.  The Complete Bundle Message of Bundle A is repeated in the second Link-layer PDU, with the remainder of the second PDU filled with the next Segment of Bundle B.  The third Link-layer PDU contains the last Segment of Bundle B and padding.  An alternate implementation could have segmented both Bundles, and repeated the Segments of Bundle A whilst interleaving the Segments of Bundle B.
 
 # Acknowledgments
+{:numbered="false"}
 
 The author would like to thank Erik Kline, Brian Sipos, and Chloe He for their invaluable feedback and discussion of the protocol, and this work would not exist without the excellent prior work by the TCP-CLv4 authors.
