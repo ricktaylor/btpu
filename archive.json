@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-02-17T00:43:56.383494+00:00",
+  "timestamp": "2026-02-19T00:45:15.441472+00:00",
   "repo": "ricktaylor/btpu",
   "labels": [
     {
@@ -86,7 +86,7 @@
       "labels": [],
       "body": "Last commits includes metadata items in every message used for transmission.\nCurrently, only a single metadata type is defined (the \"Bundle Length Metadata Item\").\nIn my opinion, this optional information could be included in message content of a \"Transfert Start\" message without adding more complexity of every message in the whole protocol.\n\nIncreasing complexity means a lot more combination case to take into account during parsing.\nAnd some weird combinations like having a \"Bundle Length Metadata Item\" into a \"Transfert Cancel\" message.",
       "createdAt": "2025-10-29T11:05:34Z",
-      "updatedAt": "2025-10-29T14:44:08Z",
+      "updatedAt": "2026-02-17T14:53:10Z",
       "closedAt": null,
       "comments": [
         {
@@ -102,6 +102,13 @@
           "body": "I write this issue mainly for discussing about this topic, not because I strongly think that we should not include metadata into messages.\n\nI'm totally fine with having hints on some messages. And I think it's a good idea to give hints to help receiver collect data as fluently as possible.\n\nHints could be included in Transfer Start or Transfer Segment messages (for example) **content part** and leave every other messages without any mention of metadata. Those hints could be optional with the same mechanism as the one used by metadata in current state of the protocol. A flag or a length describing \"metadata part\".\n\n**Potential drawback I see**: It increase the size of every messages that may contains metadata (even those with no metadata field) since we may include a flag field or a length field. But, message's length field is longer and can describe bigger messages since we don't make use of 4 bits from length field to code flags.",
           "createdAt": "2025-10-29T14:44:08Z",
           "updatedAt": "2025-10-29T14:44:08Z"
+        },
+        {
+          "author": "ricktaylor",
+          "authorAssociation": "OWNER",
+          "body": "Sorry for the long silence ;)\n\nThe next revision will rename \"Metadata\" to \"Hints\" to better reflect their purpose - these are advisory items that MAY be included, not critical protocol metadata.\n\nThe key insight from our discussion was that different Hints may have different applicability. A \"Bundle Length\" hint only makes sense in Transfer Segment/End messages, but a future \"Total Contact Time\" hint might be applicable to any message type, including Padding.\n\nRather than restricting Hints globally to certain message types (which would limit future flexibility), the next revision will:\n\n1. Require each Hint type specification to define which message types it's applicable to\n2. Require each Hint type specification to define receiver behavior when encountered in unexpected message types\n\nFor the Bundle Length Hint specifically, the spec will state:\n> This Hint Item MAY be included in a Transfer Segment Message or a Transfer End Message. Receivers SHOULD ignore this Hint Item if encountered in other message types.\n\nThis should address your concern about \"weird combinations\" - a Bundle Length in a Transfer Cancel would simply be ignored - while preserving flexibility for future link-level hints that might legitimately appear in any message.\n\nThe IANA registry section will mandate this pattern for all future Hint registrations.",
+          "createdAt": "2026-02-17T14:53:09Z",
+          "updatedAt": "2026-02-17T14:53:09Z"
         }
       ]
     },
@@ -117,9 +124,24 @@
       "labels": [],
       "body": "Hello. I'm trying to implement BTP Unidirectional. However I ran into a conflict between the bundle segmentation and the interleaving transfer of bundles of different priorities.\n\nIn the [Segmentation and Transfers](https://ricktaylor.github.io/btpu/draft-ietf-dtn-btpu-01/draft-ietf-dtn-btpu.html#name-segmentation-and-transfers) section, it's said that each segment is assigned a **monotonically decreasing** segment index. So when we send the first segment of a bundle we need to know the total number of segments for this bundle.\n\nHowever in [Segmentation of a sequence of Bundles of different priority](https://ricktaylor.github.io/btpu/draft-ietf-dtn-btpu-01/draft-ietf-dtn-btpu.html#name-segmentation-of-a-sequence-of) it's written that segments of different bundles may be interleaved if a bundle with an higher priority is queued for transmission.\n\nSo, in the hypothetic case below :\n\n```text\n                       +----------------+\n                       | Bundle C       |             High Priority\n                       +----------------+\n+--------------+-----------------+\n| Bundle A     | Bundle B        |                    Low Priority\n+--------------+-----------------+\n\n                       :                :         \n:              :                 :\n\n+--------------+-------+----------------+-----+----------------------+\n| Complete     | T1    | Complete       |  ?  |           ?          |\n| Bundle A     | S0    | Bundle C       |     |                      |\n+--------------+-------+----------------+-----+----------------------+\n\n:                      :                      :                      :\n\n+----------------------+----------------------+----------------------+\n| Link-layer PDU N     | Link-layer PDU N + 1 | Link-layer PDU N + 2 |\n+----------------------+----------------------+----------------------+\n```\n\nThere is two possibilities to fill the link-layer PDUs.\n\n# Possibility 1 (compatible with the current draft)\n\n```text\n                       +----------------+\n                       | Bundle C       |             High Priority\n                       +----------------+\n+--------------+-----------------+\n| Bundle A     | Bundle B        |                    Low Priority\n+--------------+-----------------+\n\n                       :                :         \n:              :                 :\n\n+--------------+-------+----------------+-----+----------+-----------+\n| Complete     | T1    | Complete       | Pad |    T1    |    Pad    |\n| Bundle A     | S0    | Bundle C       |     |    S1    |           |\n+--------------+-------+----------------+-----+----------+-----------+\n\n:                      :                      :                      :\n\n+----------------------+----------------------+----------------------+\n| Link-layer PDU N     | Link-layer PDU N + 1 | Link-layer PDU N + 2 |\n+----------------------+----------------------+----------------------+\n```\n\nWe split the `Bundle B` in two segments, the first filling up the first link-layer PDU (N). `Bundle C` with higher priority is queued, we send it as a complete bundle in the second link-layer PDU (N + 1).\nThe second segment of `Bundle B` doesn't fit in the remaining space of the second link-layer PDU (N + 1) so we fill it with a padding message and we send the second segment in a third link-layer PDU (N + 2).\n\n# Possibility 2 (incompatible with the current draft but more compact)\n\n```text\n                       +----------------+\n                       | Bundle C       |             High Priority\n                       +----------------+\n+--------------+-----------------+\n| Bundle A     | Bundle B        |                    Low Priority\n+--------------+-----------------+\n\n                       :                :         \n:              :                 :\n\n+--------------+-------+----------------+-----+-----+----------------+\n| Complete     | T1    | Complete       | T1  | T1  |    Pad         |\n| Bundle A     | S0    | Bundle C       | S1  | S2  |                |\n+--------------+-------+----------------+-----+-----+----------------+\n\n:                      :                      :                      :\n\n+----------------------+----------------------+----------------------+\n| Link-layer PDU N     | Link-layer PDU N + 1 | Link-layer PDU N + 2 |\n+----------------------+----------------------+----------------------+\n```\n\nWe create a first segment for `Bundle B` to fill the first link-layer PDU (N). `Bundle C` with higher priority is queued, we send it as a complete bundle in the second link-layer PDU (N + 1).\nThen we create a second segment for `Bundle B` to fill the second link-layer PDU (N + 1) and we create a third and last segment for `Bundle B` to send in the third link-layer PDU (N + 2).\n\n# Pro and cons of each possibility\n\nThe first possibility allows to have a monotically decreasing segment index but is less data compact in certain situation (e.g: a `Bundle D` that could fit in one **bundle message** in `Link-layer PDU N + 2` of the second possibility but would need a fourth link-layer PDU (N + 3) in the first possibility).\n\nThe second possibility is the most compact and permits to fill the third link-layer PDU (N + 2) with a larger **bundle message** but we can't know in advance the total number of segments for `Bundle B` so we can't assign a monotically decreasing segment index.\n\n# My question\n\nDo we stick to the current **monotically decreasing segment index** or do we need to change the segment identification method to allow more compact transfers ?\n\nThere is also the possibility that I did not fully understand the draft.\n",
       "createdAt": "2025-12-19T17:31:09Z",
-      "updatedAt": "2025-12-19T17:31:09Z",
+      "updatedAt": "2026-02-17T16:15:23Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "ricktaylor",
+          "authorAssociation": "OWNER",
+          "body": "Sorry for the late reply - you make a great deal of sense.  I'm going to revert to the original ascending index.  The descending was to satisfy a perceived need for a \"expected total length\" counter - but it didn't really do that well, and causes the problems you describe.\n\nThe next draft (coming soon) will revert",
+          "createdAt": "2026-02-17T14:14:44Z",
+          "updatedAt": "2026-02-17T14:14:44Z"
+        },
+        {
+          "author": "climoge",
+          "authorAssociation": "NONE",
+          "body": "Thanks a lot ! I will try to implement the new draft in my experimental project soon.",
+          "createdAt": "2026-02-17T16:15:23Z",
+          "updatedAt": "2026-02-17T16:15:23Z"
+        }
+      ]
     }
   ],
   "pulls": []
