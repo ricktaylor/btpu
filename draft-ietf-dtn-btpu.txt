@@ -4,8 +4,8 @@
 
 Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                        17 February 2026
-Expires: 21 August 2026
+Intended status: Standards Track                            12 June 2026
+Expires: 14 December 2026
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 August 2026.
+   This Internet-Draft will expire on 14 December 2026.
 
 Copyright Notice
 
@@ -403,6 +403,10 @@ Table of Contents
        IF GREATEST IS NIL THEN
            # The first transfer is always considered new
            RETURN TRUE
+       IF T = GREATEST THEN
+           # A repeated Message for the greatest transfer
+           #  is in progress, not new
+           RETURN FALSE
        # Check if the transfer is within the valid window range
        #  (half of the number space + window size)
        RETURN ((T - GREATEST + 2^32) MOD 2^32) <
