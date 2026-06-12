@@ -197,6 +197,10 @@ The size of the Transfer Window SHOULD be the same at the sender and all receive
         IF GREATEST IS NIL THEN
             # The first transfer is always considered new
             RETURN TRUE
+        IF T = GREATEST THEN
+            # A repeated Message for the greatest transfer
+            #  is in progress, not new
+            RETURN FALSE
         # Check if the transfer is within the valid window range
         #  (half of the number space + window size)
         RETURN ((T - GREATEST + 2^32) MOD 2^32) <
