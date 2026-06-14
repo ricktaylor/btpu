@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-11T01:15:05.837152+00:00",
+  "timestamp": "2026-06-14T01:18:20.619541+00:00",
   "repo": "ricktaylor/btpu",
   "labels": [
     {
@@ -149,6 +149,22 @@
           "updatedAt": "2026-03-13T16:01:34Z"
         }
       ]
+    },
+    {
+      "number": 4,
+      "id": "I_kwDONqGLE88AAAABFZLEfQ",
+      "title": "No way of knowing if a Bundle Message is repeated on receiver side",
+      "url": "https://github.com/ricktaylor/btpu/issues/4",
+      "state": "OPEN",
+      "author": "climoge",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Hello.\n\nA `Bundle Message` does not have a `Transfer Number` field, so a **Receiver** can't determine if a received `Bundle Message` is new or is a repeated one.\n\nAlso, we can't slide the `Transfer Window` because of that, that's a problem :\nIn the RFC draft it's stated that we can **at most** have the `Transfer Window` size number of simultaneous transfers. But we can send an infinite amount of `Bundle Message`s because of the lack of an associated `Transfer Number`.\n\nOr do I miss something ?",
+      "createdAt": "2026-06-13T20:51:32Z",
+      "updatedAt": "2026-06-13T20:52:06Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": []
