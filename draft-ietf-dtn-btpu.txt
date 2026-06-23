@@ -4,8 +4,8 @@
 
 Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                            12 June 2026
-Expires: 14 December 2026
+Intended status: Standards Track                            23 June 2026
+Expires: 25 December 2026
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 December 2026.
+   This Internet-Draft will expire on 25 December 2026.
 
 Copyright Notice
 
@@ -573,6 +573,11 @@ Table of Contents
    entirety in a single Link-layer PDU to avoid the overhead of
    segmentation, and reducing the risk of the total loss of a Bundle if
    one or more unnecessary segments of a Bundle is lost.
+
+   Because it conveys a complete Bundle, a Bundle Message is not a
+   Transfer: it has no Transfer number and is not subject to the
+   Transfer Window (Section 5), which bounds only the number of
+   segmented Transfers that can be simultaneously in progress.
 
    A Bundle Message has a type of 2.  The Message Content MUST be a
    valid Bundle.
