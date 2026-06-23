@@ -312,6 +312,8 @@ The following standard protocol Messages are defined:
 
 The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.
 
+Because it conveys a complete Bundle, a Bundle Message is not a Transfer: it has no Transfer number and is not subject to the [Transfer Window](#transfer-window), which bounds only the number of segmented Transfers that can be simultaneously in progress.
+
 A Bundle Message has a type of 2. The Message Content MUST be a valid Bundle.
 
 Emitting a Bundle Message with a Length field value that indicates no Bundle content (e.g., a length of 0 if no metadata is present) only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
