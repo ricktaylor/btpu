@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-23T01:06:13.669957+00:00",
+  "timestamp": "2026-06-25T01:08:33.269511+00:00",
   "repo": "ricktaylor/btpu",
   "labels": [
     {
@@ -155,16 +155,31 @@
       "id": "I_kwDONqGLE88AAAABFZLEfQ",
       "title": "No way of knowing if a Bundle Message is repeated on receiver side",
       "url": "https://github.com/ricktaylor/btpu/issues/4",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "climoge",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Hello.\n\nA `Bundle Message` does not have a `Transfer Number` field, so a **Receiver** can't determine if a received `Bundle Message` is new or is a repeated one.\n\nAlso, we can't slide the `Transfer Window` because of that, that's a problem :\nIn the RFC draft it's stated that we can **at most** have the `Transfer Window` size number of simultaneous transfers. But we can send an infinite amount of `Bundle Message`s because of the lack of an associated `Transfer Number`.\n\nOr do I miss something ?",
       "createdAt": "2026-06-13T20:51:32Z",
-      "updatedAt": "2026-06-13T20:52:06Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-06-24T11:00:45Z",
+      "closedAt": "2026-06-23T15:31:40Z",
+      "comments": [
+        {
+          "author": "ricktaylor",
+          "authorAssociation": "OWNER",
+          "body": "Hi, and thanks for reading the draft so closely \u2014 this is a very natural question coming from a bidirectional, reliable CL like TCPCLv4.\n\nThe framing to keep in mind is that BTP-U is unidirectional and unreliable by design (\u00a7Handling Link-layer PDU Loss): there's no return path, so there are no acknowledgements and no \"sliding window\" in the TCP flow-control/reliability sense, and deliberately repeating Messages is a feature, not something the receiver must detect and reject. With that, the two concerns resolve as follows.\n\n1. A Bundle Message is a complete bundle, deliberately with no Transfer Number. \u00a7Segmentation and Transfers says: \"if a complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the Bundle Message.\" The Bundle Message (type 2) accordingly carries only the bundle itself \u2014 its content \"MUST be a valid Bundle\" \u2014 and has no Transfer Number field, unlike the Transfer Segment / Transfer End / Transfer Cancel Messages, which all carry one. A Transfer Number exists solely to reassemble a segmented bundle and to scope its in-progress reassembly state; a single-message bundle has nothing to reassemble, so no identifier is required. This isn't an omission \u2014 it's the draft saying a whole-bundle transfer needs no transfer context.\n\n2. The Transfer Window bounds concurrent in-progress segmented Transfers, not the bundle rate. Per \u00a7Transfer Window it's \"the maximum number of Transfers that can be simultaneously in progress\" \u2014 a cap on how many reassembly contexts a receiver holds open at once, and it slides off the Transfer Numbers carried in the segment-bearing Messages. A Bundle Message isn't a Transfer, carries no Transfer Number, and opens no reassembly state, so it occupies no window slot. That's exactly why you can send any number of Bundle Messages without touching the window: they're a stream of complete, stateless bundles. The \"infinite Bundle Messages vs. finite window\" comparison is really comparing two different things \u2014 stateless complete-bundle delivery versus the bounded set of concurrent segmented reassemblies, which is the only thing the window limits.\n\nOn new vs. repeated: for a complete bundle that's the Bundle Protocol's job, not the CL's, and it's well-defined. RFC 9171 identifies every bundle unambiguously by its source node ID and creation timestamp (and, for a fragment, the fragment offset and total ADU length), so duplicate detection is unambiguous and handled by the BPA. Because the link is one-way and lossy, a sender may intentionally repeat a Bundle Message for robustness (see \u00a7Repetition of Bundle Segments); the receiving CL simply hands each complete bundle up, and the BPA discards any duplicate by that identity. BTP-U only defines optional duplicate suppression within an in-progress Transfer (a receiver MAY ignore a Message it already holds); it deliberately doesn't deduplicate whole bundles, precisely because RFC 9171 already does.\n\nSo the receiver needs no Transfer Number on a Bundle Message, and there's no window accounting that any number of Bundle Messages could overflow.\n\nHope that helps?",
+          "createdAt": "2026-06-23T15:31:33Z",
+          "updatedAt": "2026-06-23T15:31:33Z"
+        },
+        {
+          "author": "climoge",
+          "authorAssociation": "NONE",
+          "body": "Hi,\n\nThank you, it helps a lot !\nI spoke to the person I\u2019m working with on the draft about this issue I had and they said to me that the Bundle Protocol can handle deduplication.\nI'm solely focused on implementing the BTPU draft so I'm lacking a better understanding of the whole protocol.\nSorry for bothering you with beginner questions.\n\nI've almost finished a first implementation draft of the BTPU in Rust with a C FFI, I will share it when it's done.",
+          "createdAt": "2026-06-24T11:00:45Z",
+          "updatedAt": "2026-06-24T11:00:45Z"
+        }
+      ]
     }
   ],
   "pulls": []
