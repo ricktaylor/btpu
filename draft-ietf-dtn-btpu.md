@@ -181,7 +181,7 @@ The sender MUST maintain a reference to the greatest Transfer number used in any
 
 Each receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelled).  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number. This margin allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
-The size of the Transfer Window SHOULD be the same at the sender and all receivers, and MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
+The size of the Transfer Window at a receiver MUST NOT be smaller than the size of the Transfer Window at the sender; the simplest way to ensure this is to configure the same size at the sender and all receivers, which is RECOMMENDED.  Transfer Window sizes MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
     const WINDOW_SIZE  # Configured transfer window size
     var GREATEST = NIL # Greatest received transfer number, initially NIL
@@ -303,6 +303,14 @@ Length:
 
 Value:
 : The payload of the Hint Item.
+
+## Unrecognized Messages and Hint Items {#unrecognized-types}
+
+Because all Messages, except the Indefinite Padding Message, follow the common Message format, a Message can be skipped by a receiver without knowledge of its Type-specific semantics.  A receiver that parses a Message with a Type value that it does not recognize, other than the value 6 or a value in the range 0x80..0x9F, MUST ignore the Message by skipping the number of octets indicated by the Length field, and continue processing any subsequent Messages in the Link-layer PDU.  This applies to every unrecognized Type value, including any allocated in the future from the range reserved for future expansion, allowing Message types defined in future documents to be introduced into deployments where not all receivers have been updated to recognize them.
+
+The Type value 6 and Type values in the range 0x80..0x9F indicate that the octets encountered are not a Message at all, but an encapsulated bundle in its native format: 6 is the initial octet of a BPv6 bundle, and 0x80..0x9F are the possible initial octets of the CBOR array of a BPv7 bundle, see [](#iana-considerations).  Both bundle formats are self-delimiting, so a receiver that implements the corresponding format can determine the extent of the bundle, handle it as it would the content of a [Bundle Message](#bundle-message), and continue processing any subsequent Messages in the Link-layer PDU.  A receiver that does not implement the corresponding bundle format cannot determine the extent of the bundle, and MUST NOT attempt to process the remainder of the Link-layer PDU.
+
+Similarly, a receiver that parses a Hint Item with a Hint Type that it does not recognize MUST ignore the Hint Item by skipping the number of octets indicated by the Hint Item Length field, and continue processing any subsequent Hint Items and the Message Content.  Hint Items are therefore only suitable for carrying optional information that can be safely ignored by a receiver.
 
 # Message Definitions
 
@@ -468,6 +476,8 @@ IANA is requested to create a new registry entitled "BTPU Message Types", in the
 | 0x70..0x7F | Private Use |
 | 0xA0..0xFF | Reserved for future expansion |
 {: #tab-message-types-reg align="left" title="BTPU Message Types registration policies"}
+
+Specifications defining new Message Types, including any future allocation from the range reserved for future expansion, MUST use the common Message format defined in [](#message-format), so that receivers that do not recognize the new Type value can process the containing Link-layer PDU as described in [](#unrecognized-types).
 
 The initial values for the registry are:
 
