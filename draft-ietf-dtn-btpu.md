@@ -174,7 +174,7 @@ In order to support the transmission of Bundles with different priorities, Trans
 
 ## Cancelling Transfers {#cancelling-transfers}
 
-A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A receiver of a Transfer Cancel Message SHOULD discard any segments already received and MUST ignore any further Messages associated with the Transfer.
+A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A Transfer is also considered cancelled when its Transfer number leaves the receiver's [Transfer Window](#transfer-window).  When a Transfer is cancelled, a receiver MUST discard any Segments of the Transfer already received, and MUST ignore any further Messages associated with the Transfer, so that the Bundle is not delivered to an upper layer unless the Transfer was already complete.
 
 # Transfer Window {#transfer-window}
 
@@ -388,7 +388,7 @@ Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the tota
 
 ## Transfer Cancel Message
 
-The Transfer Cancel Message is used to indicate that the indicated Transfer is being aborted, and any prior or later received Segments associated with the Transfer MUST be discarded by a receiver.
+The Transfer Cancel Message is used to indicate that the indicated Transfer is being aborted, and that any Segments associated with the Transfer, whether received before or after the Transfer Cancel Message, are to be discarded by a receiver, as described in [](#cancelling-transfers).
 
 A Transfer Cancel Message has a type of 5. The Message Content field is formatted as follows:
 
