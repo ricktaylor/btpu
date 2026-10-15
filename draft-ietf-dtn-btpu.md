@@ -128,7 +128,7 @@ Transfer:
 : The context in which the transmission of the Segments of a single Bundle occurs, see [](#transfers).
 
 Transfer Message:
-: A Message that carries a Transfer number and is subject to the [Transfer Window](#transfer-window): the [Transfer Segment](#transfer-segment-message), [Transfer End](#transfer-end-message), and [Transfer Cancel](#transfer-cancel-message) Messages, and any Message defined as a Transfer Message by another specification.
+: A Message that carries the Transfer number of the Transfer it is associated with: the [Transfer Segment](#transfer-segment-message), [Transfer End](#transfer-end-message), and [Transfer Cancel](#transfer-cancel-message) Messages, and any Message defined as a Transfer Message by another specification.
 
 # Protocol Overview
 
@@ -182,17 +182,17 @@ Because Messages can be lost in transmission due to the loss of Link-layer PDUs,
 
 The sender MUST maintain a reference to the greatest Transfer number used in any emitted Transfer Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
-Each receiver MUST maintain a reference to the greatest Transfer number received in any Transfer Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, a Transfer number T is greater than the greatest previously received Transfer number G if (T - G) modulo 2^32 is non-zero and less than 2^31 minus the size of the Transfer Window.  This is serial number arithmetic, as defined in {{?RFC1982}} with a SERIAL_BITS value of 32, with the range reduced by the size of the Transfer Window, so that no Transfer number that was within the Transfer Window before an advance of the greatest Transfer number can be considered greater than the new greatest Transfer number.  Using half the number space allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
+A receiver applies the algorithm described below to every Transfer Message it receives, except an [invalid](#invalid-messages) Transfer Message, which is discarded.  The algorithm MUST be applied, advancing the Transfer Window if required, before the content of the Message is processed, and the Message MUST be ignored if its Transfer is not then in progress.  A Transfer is in progress at a receiver while its Transfer number is within the receiver's Transfer Window, whether or not any Messages associated with the Transfer have been received.
 
-Every Transfer Message received, including the Transfer Cancel Message, is subject to this algorithm, and a receiver MUST apply it, advancing the Transfer Window if required, before processing the content of the Message.  A Transfer is in progress at a receiver while its Transfer number is within the receiver's Transfer Window, whether or not any Messages associated with the Transfer have been received.
+Each receiver MUST maintain a reference to the greatest Transfer number received in any Transfer Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, a Transfer number T is greater than the greatest previously received Transfer number G if (T - G) modulo 2^32 is non-zero and less than 2^31 minus the size of the Transfer Window.  This is serial number arithmetic, as defined in {{?RFC1982}} with a SERIAL_BITS value of 32, with the range reduced by the size of the Transfer Window, so that no Transfer number that was within the Transfer Window before an advance of the greatest Transfer number can be considered greater than the new greatest Transfer number.  Using half the number space allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
 The size of the Transfer Window at a receiver MUST NOT be smaller than the size of the Transfer Window at the sender; the simplest way to ensure this is to configure the same size at the sender and all receivers, which is RECOMMENDED.  Transfer Window sizes MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
     const WINDOW_SIZE  # Configured transfer window size
     var GREATEST = NIL # Greatest received transfer number, initially NIL
 
-    # Function to check if a transfer is valid within the current window
-    FUNCTION isTransferValid(T):
+    # Function to check if a transfer is in progress
+    FUNCTION isTransferInProgress(T):
         # Ensure Transfer T is within the
         #  sliding window defined by WINDOW_SIZE
         RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
@@ -211,21 +211,23 @@ The size of the Transfer Window at a receiver MUST NOT be smaller than the size 
         RETURN ((T - GREATEST + 2^32) MOD 2^32) <
                          (2^32 / 2) - WINDOW_SIZE
 
-    # Main function, called for every received Transfer Message,
-    #  to manage the sliding window and process the Message
+    # Main function, called for every Transfer Message received
+    #  that is not invalid, to manage the sliding window and
+    #  process the Message
     FUNCTION processTransferMessage(T):
         IF isNewTransfer(T) THEN
             # New transfer, update the greatest received transfer number
             GREATEST ← T
             # Cancel transfers that are now outside the window
             CANCEL_OUTDATED_TRANSFERS()
-        IF isTransferValid(T) THEN
+        IF isTransferInProgress(T) THEN
             # Transfer is in progress, continue handling it
             CONTINUE_PROCESSING(T)
         ELSE
-            # Transfer is invalid (outside the window), ignore it
+            # Transfer is not in progress (outside the window),
+            #  ignore it
             IGNORE_MESSAGE(T)
-{: #fig-windowing title="A receiver's algorithm for determining Transfer number validity and sliding window" artwork-type="pseudocode"  }
+{: #fig-windowing title="A receiver's algorithm for managing the sliding Transfer Window" artwork-type="pseudocode"  }
 
 [^1]: 16 is an arbitrary number, and needs discussing by the WG.
 
@@ -318,6 +320,18 @@ The Type value 6 and Type values in the range 0x80..0x9F indicate that the octet
 
 Similarly, a receiver that parses a Hint Item with a Hint Type that it does not recognize MUST ignore the Hint Item by skipping the number of octets indicated by the Hint Item Length field, and continue processing any subsequent Hint Items and the Message Content.  Hint Items are therefore only suitable for carrying optional information that can be safely ignored by a receiver.
 
+## Invalid Messages and Hint Items {#invalid-messages}
+
+A Message is invalid if:
+
+- it is truncated, i.e. the Link-layer PDU ends before the end of the four octet Message header, or before the end of the Message as indicated by its Length field;
+- the 'H' flag is set, and its Hint Items extend beyond the end of the Message as indicated by its Length field; or
+- its Message Content is too short to contain the fields defined for its Message type, or otherwise does not meet the length requirements defined for its Message type.
+
+A receiver MUST discard an invalid Message, and continue processing any subsequent Messages in the Link-layer PDU.
+
+A Hint Item that does not meet the requirements defined for its Hint Type is invalid, and MUST be ignored by a receiver as if it were an unrecognized Hint Item.  An invalid Hint Item does not make the containing Message invalid.
+
 # Message Definitions
 
 The following standard protocol Messages are defined:
@@ -401,9 +415,9 @@ A Transfer Cancel Message has a type of 5. The Message Content field is formatte
 Transfer Number:
 : The numeric identifier of the [in-progress](#transfer-window) Transfer that is cancelled, encoded as a 32-bit unsigned integer in network byte order.
 
-The Transfer Cancel Message has no content, and hence has a fixed length of 4 octets.
+The Message Content of a Transfer Cancel Message, excluding any Hint Items, is exactly 4 octets in length.  A Transfer Cancel Message with Message Content of any other length is invalid, see [](#invalid-messages).
 
-A peer that receives a Transfer Cancel Message with a Transfer Number field value that does not match the numeric identifier of an [in-progress](#transfer-window) Transfer MUST ignore the Message.  As the Transfer Cancel Message is a Transfer Message, the receiver applies the [Transfer Window](#transfer-window) algorithm before making this check, so a Transfer Cancel Message received before any Segment of the Transfer it cancels still cancels the Transfer.
+Like any Transfer Message, a Transfer Cancel Message is processed as described in [](#transfer-window), so a Transfer Cancel Message received before any Segment of the Transfer it cancels still cancels the Transfer.
 
 ## Definite Padding Message
 
