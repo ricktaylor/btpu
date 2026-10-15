@@ -99,11 +99,12 @@ Table of Contents
    8.  Message Definitions
      8.1.  Bundle Message
      8.2.  Session Start Message
-     8.3.  Transfer Segment Message
-     8.4.  Transfer End Message
-     8.5.  Transfer Cancel Message
-     8.6.  Definite Padding Message
-     8.7.  Indefinite Padding Message
+     8.3.  Session End Message
+     8.4.  Transfer Segment Message
+     8.5.  Transfer End Message
+     8.6.  Transfer Cancel Message
+     8.7.  Definite Padding Message
+     8.8.  Indefinite Padding Message
    9.  Standard Hint Items
      9.1.  Bundle Length Hint
    10. Security Considerations
@@ -228,8 +229,8 @@ Table of Contents
    Transfer:  The context in which the transmission of the Segments of a
       single Bundle occurs, see Section 4.
 
-   Transfer Message:  One of the Transfer Segment (Section 8.3),
-      Transfer End (Section 8.4), and Transfer Cancel (Section 8.5)
+   Transfer Message:  One of the Transfer Segment (Section 8.4),
+      Transfer End (Section 8.5), and Transfer Cancel (Section 8.6)
       Messages, which carry the Transfer number of the Transfer with
       which they are associated, or any other Message that another
       specification defines to be a Transfer Message.
@@ -284,8 +285,8 @@ Table of Contents
    size of a Link-layer PDU, an implementation will likely need to add
    padding to the PDU so that the Link-layer PDU size requirements are
    met.  Two Messages are available for this purpose: The Definite
-   Padding Message (Section 8.6) and the Indefinite Padding Message
-   (Section 8.7).  Padding Messages are valid at any point within a
+   Padding Message (Section 8.7) and the Indefinite Padding Message
+   (Section 8.8).  Padding Messages are valid at any point within a
    Link-layer PDU.
 
    It is RECOMMENDED that implementations use the Definite Padding
@@ -323,9 +324,9 @@ Table of Contents
 
    The Segments of a Bundle, other than the final Segment, MUST be
    emitted by the sender as a series of Transfer Segment Messages
-   (Section 8.3) carrying the same Transfer identifier, starting with
+   (Section 8.4) carrying the same Transfer identifier, starting with
    Segment Index zero (0).  The end of a transfer MUST be indicated by
-   emitting a Transfer End Message (Section 8.4), including the index
+   emitting a Transfer End Message (Section 8.5), including the index
    and data of the final Segment.  A Transfer always consists of at
    least two Segments, as a Bundle that would fit in a single Segment is
    transferred in a Bundle Message (Section 8.1) instead.
@@ -369,18 +370,19 @@ Table of Contents
 4.2.  Cancelling Transfers
 
    A Transfer can be aborted by the sender while a Transfer is in
-   progress by emitting a Transfer Cancel Message (Section 8.5)
+   progress by emitting a Transfer Cancel Message (Section 8.6)
    containing the identifier of the Transfer to cancel.  A Transfer is
    also considered cancelled when its Transfer number leaves the
    receiver's Transfer Window (Section 5), or when a new Session
-   (Section 5.1) starts.  A receiver MAY also consider any Transfer
-   cancelled in order to protect its resources, for example to enforce
-   local limits on reassembly memory, on the size of a Bundle, or on the
-   time for which a Transfer can remain incomplete.  When a Transfer is
-   cancelled, a receiver MUST discard any Segments of the Transfer
-   already received, and MUST ignore any further Messages associated
-   with the Transfer, so that the Bundle is not delivered to an upper
-   layer unless the Transfer was already complete.
+   (Section 5.1) starts or the current Session ends.  A receiver MAY
+   also consider any Transfer cancelled in order to protect its
+   resources, for example to enforce local limits on reassembly memory,
+   on the size of a Bundle, or on the time for which a Transfer can
+   remain incomplete.  When a Transfer is cancelled, a receiver MUST
+   discard any Segments of the Transfer already received, and MUST
+   ignore any further Messages associated with the Transfer, so that the
+   Bundle is not delivered to an upper layer unless the Transfer was
+   already complete.
 
 5.  Transfer Window
 
@@ -437,61 +439,45 @@ Table of Contents
    and is RECOMMENDED to be 16.
    // 16 is an arbitrary number, and needs discussing by the WG.
 
- var SESSION_ID = NIL  # Current session ID, initially NIL
- var WINDOW_SIZE       # Transfer window size of the current session
- var GREATEST          # Greatest transfer number of the current session
+var WINDOW_SIZE  # Transfer window size, set when the session starts
+var GREATEST     # Greatest transfer number, set when the session starts
 
- # Function called for every valid Session Start Message received
- FUNCTION processSessionStart(ID, NEXT, SIZE):
-     IF ID = SESSION_ID THEN
-         # A repeated Session Start for the current session
-         RETURN
-     # A new session, cancel all transfers of the previous session
-     CANCEL_ALL_TRANSFERS()
-     SESSION_ID ← ID
-     WINDOW_SIZE ← SIZE
-     GREATEST ← (NEXT - 1 + 2^32) MOD 2^32
+# Function to check if a transfer is in progress
+FUNCTION isTransferInProgress(T):
+    # Ensure Transfer T is within the
+    #  sliding window defined by WINDOW_SIZE
+    RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
 
- # Function to check if a transfer is in progress
- FUNCTION isTransferInProgress(T):
-     # Ensure Transfer T is within the
-     #  sliding window defined by WINDOW_SIZE
-     RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
+# Function to check if the transfer is considered a "new" transfer
+FUNCTION isNewTransfer(T):
+    IF T = GREATEST THEN
+        # A repeated Message for the greatest transfer
+        #  is in progress, not new
+        RETURN FALSE
+    # Check if the transfer is ahead of GREATEST by less than
+    #  half of the number space, less the window size
+    RETURN ((T - GREATEST + 2^32) MOD 2^32) <
+                     (2^32 / 2) - WINDOW_SIZE
 
- # Function to check if the transfer is considered a "new" transfer
- FUNCTION isNewTransfer(T):
-     IF T = GREATEST THEN
-         # A repeated Message for the greatest transfer
-         #  is in progress, not new
-         RETURN FALSE
-     # Check if the transfer is ahead of GREATEST by less than
-     #  half of the number space, less the window size
-     RETURN ((T - GREATEST + 2^32) MOD 2^32) <
-                      (2^32 / 2) - WINDOW_SIZE
+# Main function, called for every Transfer Message received
+#  that is not invalid, to manage the sliding window and
+#  process the Message
+FUNCTION processTransferMessage(T):
+    IF isNewTransfer(T) THEN
+        # New transfer, update the greatest received transfer number
+        GREATEST ← T
+        # Cancel transfers that are now outside the window
+        CANCEL_OUTDATED_TRANSFERS()
+    IF isTransferInProgress(T) THEN
+        # Transfer is in progress, continue handling it
+        CONTINUE_PROCESSING(T)
+    ELSE
+        # Transfer is not in progress (outside the window),
+        #  ignore it
+        IGNORE_MESSAGE(T)
 
- # Main function, called for every Transfer Message received
- #  that is not invalid, to manage the sliding window and
- #  process the Message
- FUNCTION processTransferMessage(T):
-     IF SESSION_ID IS NIL THEN
-         # No session has started, ignore it
-         IGNORE_MESSAGE(T)
-         RETURN
-     IF isNewTransfer(T) THEN
-         # New transfer, update the greatest received transfer number
-         GREATEST ← T
-         # Cancel transfers that are now outside the window
-         CANCEL_OUTDATED_TRANSFERS()
-     IF isTransferInProgress(T) THEN
-         # Transfer is in progress, continue handling it
-         CONTINUE_PROCESSING(T)
-     ELSE
-         # Transfer is not in progress (outside the window),
-         #  ignore it
-         IGNORE_MESSAGE(T)
-
-     Figure 2: A receiver's algorithm for managing Sessions and the
-                        sliding Transfer Window
+      Figure 2: A receiver's algorithm for managing the sliding
+                           Transfer Window
 
 5.1.  Sessions
 
@@ -529,7 +515,9 @@ Table of Contents
 
    On receipt of a Session Start Message, a receiver MUST ignore the
    Message if it carries the Session ID of the receiver's current
-   Session.  Otherwise, the receiver MUST start the new Session: it
+   Session, or of the Session that the receiver most recently saw end
+   with a Session End Message (Section 8.3), as the Message is then a
+   repetition.  Otherwise, the receiver MUST start the new Session: it
    considers all Transfers of any previous Session cancelled
    (Section 4.2); adopts the Session ID and Transfer Window size carried
    in the Message; and sets its greatest Transfer number to the Next
@@ -538,13 +526,31 @@ Table of Contents
    only meaningful within a Session, any Transfer Message subsequently
    received is associated with a Transfer of the new Session, even if
    its Transfer number matches that of a Transfer of a previous Session.
-   Pseudocode is given in Figure 2.
 
    As a receiver ignores any Session Start Message for its current
    Session, it only processes the Hint Items (Section 7.2) of the
    Session Start Message that started the Session.  Hint Types valid in
    the Session Start Message therefore SHOULD carry information that
    does not change during a Session.
+
+   A sender MAY end a Session gracefully, for example before shutting
+   down, by emitting a Session End Message (Section 8.3) carrying the
+   Session ID of the Session.  A sender MUST NOT emit any Transfer
+   Message of a Session after emitting a Session End Message for it, and
+   SHOULD emit the Session End Message only after the last Messages of
+   the Session, including any repetitions, that it intends receivers to
+   process.  As Link-layer PDUs can be lost, a sender SHOULD repeat the
+   Session End Message in several Link-layer PDUs.
+
+   On receipt of a Session End Message carrying the Session ID of its
+   current Session, a receiver MUST consider all Transfers of the
+   Session cancelled (Section 4.2), and then has no current Session, so
+   that it ignores Transfer Messages until a new Session starts.  A
+   receiver MUST ignore a Session End Message carrying any other Session
+   ID.  A receiver that receives no Session End Message, for example
+   because every copy was lost, retains the state of the Session until a
+   new Session starts, or until it cancels Transfers to protect its
+   resources.
 
    A Session Start Message from a previous Session that is received
    after one from the current Session, for example due to the reordering
@@ -604,7 +610,7 @@ Table of Contents
 7.  Message Format
 
    All protocol Messages except the Indefinite Padding Message
-   (Section 8.7) follow the common "Type-Length-Value" formatting
+   (Section 8.8) follow the common "Type-Length-Value" formatting
    pattern, with each Message being identified by a four octet header
    that encodes the type of the Message, and the length of the content
    of the Message.
@@ -829,7 +835,28 @@ Table of Contents
    that does not meet the requirements of Section 5, is invalid, see
    Section 7.4.
 
-8.3.  Transfer Segment Message
+8.3.  Session End Message
+
+   The Session End Message is used by a sender to end a Session
+   (Section 5.1) gracefully.
+
+   A Session End Message has a type of 8.  The Message Content field is
+   formatted as follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Session ID                                                    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Session ID:  The Session ID of the Session that is ending, encoded as
+      a 32-bit unsigned integer in network byte order.
+
+   The Message Content of a Session End Message, excluding any Hint
+   Items, is exactly 4 octets in length.  A Session End Message with
+   Message Content of any other length is invalid, see Section 7.4.
+
+8.4.  Transfer Segment Message
 
    The Transfer Segment Message is used to encapsulate a segment of a
    multi-segment Bundle Transfer.
@@ -864,7 +891,7 @@ Table of Contents
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-8.4.  Transfer End Message
+8.5.  Transfer End Message
 
    The Transfer End Message is used to indicate the completion of a
    multi-segment Bundle Transfer, and encapsulate the final segment.
@@ -902,7 +929,7 @@ Table of Contents
    Section 8.1, a Transfer End Message with a Segment Index of zero (0)
    is invalid, see Section 7.4.
 
-8.5.  Transfer Cancel Message
+8.6.  Transfer Cancel Message
 
    The Transfer Cancel Message is used to indicate that the indicated
    Transfer is being aborted, and that any Segments associated with the
@@ -931,7 +958,7 @@ Table of Contents
    described in Section 5, so a Transfer Cancel Message received before
    any Segment of the Transfer it cancels still cancels the Transfer.
 
-8.6.  Definite Padding Message
+8.7.  Definite Padding Message
 
    The Definite Padding Message is used to add padding to a Link-layer
    PDU.
@@ -945,7 +972,7 @@ Table of Contents
    value of zero (0), adding a total of four (4) octets of padding to
    the Link-layer PDU.
 
-8.7.  Indefinite Padding Message
+8.8.  Indefinite Padding Message
 
    An Indefinite Padding Message has a type of zero (0), and in order to
    support padding with a minimum total length of one octet, the Message
@@ -1029,10 +1056,10 @@ Table of Contents
    incomplete need to take account of the expected duration of
    disruption of the link.
 
-   Similarly, an injected Transfer Cancel or Session Start Message can
-   cause a receiver to cancel Transfers in progress.  Protection against
-   the injection of Link-layer PDUs relies on the link-layer mechanisms
-   described above.
+   Similarly, an injected Transfer Cancel, Session Start, or Session End
+   Message can cause a receiver to cancel Transfers in progress.
+   Protection against the injection of Link-layer PDUs relies on the
+   link-layer mechanisms described above.
 
 11.  Deployment Considerations
 
@@ -1094,28 +1121,31 @@ Table of Contents
    |    Type    | Message                                  | Reference |
    +============+==========================================+===========+
    |     0      | Indefinite Padding Message               | This      |
-   |            | (Section 8.7)                            | document  |
+   |            | (Section 8.8)                            | document  |
    +------------+------------------------------------------+-----------+
    |     1      | Definite Padding Message                 | This      |
-   |            | (Section 8.6)                            | document  |
+   |            | (Section 8.7)                            | document  |
    +------------+------------------------------------------+-----------+
    |     2      | Bundle Message (Section 8.1)             | This      |
    |            |                                          | document  |
    +------------+------------------------------------------+-----------+
    |     3      | Transfer Segment Message                 | This      |
-   |            | (Section 8.3)                            | document  |
-   +------------+------------------------------------------+-----------+
-   |     4      | Transfer End Message                     | This      |
    |            | (Section 8.4)                            | document  |
    +------------+------------------------------------------+-----------+
-   |     5      | Transfer Cancel Message                  | This      |
+   |     4      | Transfer End Message                     | This      |
    |            | (Section 8.5)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     5      | Transfer Cancel Message                  | This      |
+   |            | (Section 8.6)                            | document  |
    +------------+------------------------------------------+-----------+
    |     6      | Reserved to avoid clash with             | This      |
    |            | BPv6                                     | document  |
    +------------+------------------------------------------+-----------+
    |     7      | Session Start Message                    | This      |
    |            | (Section 8.2)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     8      | Session End Message                      | This      |
+   |            | (Section 8.3)                            | document  |
    +------------+------------------------------------------+-----------+
    | 0x80..0x9F | Reserved to avoid clash with             | This      |
    |            | BPv7 Bundle (CBOR array)                 | document  |
