@@ -124,6 +124,9 @@ Message:
 Segment:
 : In order to transfer a Bundle larger than a Link-layer PDU, Bundles can be subdivided into Segments in order to fit within a Link-layer PDU, see [](#transfers).
 
+Session:
+: The context, identified by a Session ID announced by the sender in a [Session Start Message](#session-start-message), within which Transfer numbers are meaningful, see [](#sessions).
+
 Transfer:
 : The context in which the transmission of the Segments of a single Bundle occurs, see [](#transfers).
 
@@ -164,7 +167,7 @@ The Segments of a Bundle MUST be emitted by the sender as a series of [Transfer 
 
 In addition to a Segment Index, every Segment is associated with a Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.
 
-Transfer numbers are expressed as 32-bit unsigned integers. A sending implementation SHOULD choose a random value between 0 and 2^32-1 for the first Transfer number, and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" to zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
+Transfer numbers are expressed as 32-bit unsigned integers. A sender MAY choose any value for the first Transfer number of a [Session](#sessions), and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" to zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
 A receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the ascending order of their Segment Index.  The Segment Index in the Transfer End Message indicates the final Segment Index (N); a transfer is complete when Segments with indices 0 through N have been received.  Once all the Segments have been received and concatenated, a receiver is expected to pass the recombined Bundle to an upper layer for further processing.
 
@@ -174,7 +177,7 @@ In order to support the transmission of Bundles with different priorities, Trans
 
 ## Cancelling Transfers {#cancelling-transfers}
 
-A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A Transfer is also considered cancelled when its Transfer number leaves the receiver's [Transfer Window](#transfer-window).  When a Transfer is cancelled, a receiver MUST discard any Segments of the Transfer already received, and MUST ignore any further Messages associated with the Transfer, so that the Bundle is not delivered to an upper layer unless the Transfer was already complete.
+A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A Transfer is also considered cancelled when its Transfer number leaves the receiver's [Transfer Window](#transfer-window), or when a new [Session](#sessions) starts.  When a Transfer is cancelled, a receiver MUST discard any Segments of the Transfer already received, and MUST ignore any further Messages associated with the Transfer, so that the Bundle is not delivered to an upper layer unless the Transfer was already complete.
 
 # Transfer Window {#transfer-window}
 
@@ -182,14 +185,26 @@ Because Messages can be lost in transmission due to the loss of Link-layer PDUs,
 
 The sender MUST maintain a reference to the greatest Transfer number used in any emitted Transfer Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
-A receiver applies the algorithm described below to every Transfer Message it receives, except an [invalid](#invalid-messages) Transfer Message, which is discarded.  The algorithm MUST be applied, advancing the Transfer Window if required, before the content of the Message is processed, and the Message MUST be ignored if its Transfer is not then in progress.  A Transfer is in progress at a receiver while its Transfer number is within the receiver's Transfer Window, whether or not any Messages associated with the Transfer have been received.
+A receiver applies the algorithm described below to every Transfer Message it receives, except an [invalid](#invalid-messages) Transfer Message, which is discarded, and any Transfer Message received while the receiver has no current [Session](#sessions), which MUST be ignored.  The algorithm MUST be applied, advancing the Transfer Window if required, before the content of the Message is processed, and the Message MUST be ignored if its Transfer is not then in progress.  A Transfer is in progress at a receiver while its Transfer number is within the receiver's Transfer Window, whether or not any Messages associated with the Transfer have been received.
 
-Each receiver MUST maintain a reference to the greatest Transfer number received in any Transfer Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, a Transfer number T is greater than the greatest previously received Transfer number G if (T - G) modulo 2^32 is non-zero and less than 2^31 minus the size of the Transfer Window.  This is serial number arithmetic, as defined in {{?RFC1982}} with a SERIAL_BITS value of 32, with the range reduced by the size of the Transfer Window, so that no Transfer number that was within the Transfer Window before an advance of the greatest Transfer number can be considered greater than the new greatest Transfer number.  Using half the number space allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
+Each receiver MUST maintain a reference to the greatest Transfer number of the current Session, which is initialized when the Session starts, see [](#sessions).  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, a Transfer number T is greater than the greatest previously received Transfer number G if (T - G) modulo 2^32 is non-zero and less than 2^31 minus the size of the Transfer Window.  This is serial number arithmetic, as defined in {{?RFC1982}} with a SERIAL_BITS value of 32, with the range reduced by the size of the Transfer Window, so that no Transfer number that was within the Transfer Window before an advance of the greatest Transfer number can be considered greater than the new greatest Transfer number.  Using half the number space allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
-The size of the Transfer Window at a receiver MUST NOT be smaller than the size of the Transfer Window at the sender; the simplest way to ensure this is to configure the same size at the sender and all receivers, which is RECOMMENDED.  Transfer Window sizes MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
+The size of the Transfer Window is chosen by the sender, and announced to receivers in the [Session Start Message](#session-start-message); a receiver MUST use the announced size for the duration of the Session.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
-    const WINDOW_SIZE  # Configured transfer window size
-    var GREATEST = NIL # Greatest received transfer number, initially NIL
+    var SESSION_ID = NIL  # Current session ID, initially NIL
+    var WINDOW_SIZE       # Transfer window size of the current session
+    var GREATEST          # Greatest transfer number of the current session
+
+    # Function called for every valid Session Start Message received
+    FUNCTION processSessionStart(ID, NEXT, SIZE):
+        IF ID = SESSION_ID THEN
+            # A repeated Session Start for the current session
+            RETURN
+        # A new session, cancel all transfers of the previous session
+        CANCEL_ALL_TRANSFERS()
+        SESSION_ID ← ID
+        WINDOW_SIZE ← SIZE
+        GREATEST ← (NEXT - 1 + 2^32) MOD 2^32
 
     # Function to check if a transfer is in progress
     FUNCTION isTransferInProgress(T):
@@ -199,9 +214,6 @@ The size of the Transfer Window at a receiver MUST NOT be smaller than the size 
 
     # Function to check if the transfer is considered a "new" transfer
     FUNCTION isNewTransfer(T):
-        IF GREATEST IS NIL THEN
-            # The first transfer is always considered new
-            RETURN TRUE
         IF T = GREATEST THEN
             # A repeated Message for the greatest transfer
             #  is in progress, not new
@@ -215,6 +227,10 @@ The size of the Transfer Window at a receiver MUST NOT be smaller than the size 
     #  that is not invalid, to manage the sliding window and
     #  process the Message
     FUNCTION processTransferMessage(T):
+        IF SESSION_ID IS NIL THEN
+            # No session has started, ignore it
+            IGNORE_MESSAGE(T)
+            RETURN
         IF isNewTransfer(T) THEN
             # New transfer, update the greatest received transfer number
             GREATEST ← T
@@ -227,9 +243,21 @@ The size of the Transfer Window at a receiver MUST NOT be smaller than the size 
             # Transfer is not in progress (outside the window),
             #  ignore it
             IGNORE_MESSAGE(T)
-{: #fig-windowing title="A receiver's algorithm for managing the sliding Transfer Window" artwork-type="pseudocode"  }
+{: #fig-windowing title="A receiver's algorithm for managing Sessions and the sliding Transfer Window" artwork-type="pseudocode"  }
 
 [^1]: 16 is an arbitrary number, and needs discussing by the WG.
+
+## Sessions {#sessions}
+
+Transfer numbers, and the state a receiver holds for each Transfer, are only meaningful within a Session.  A sender starts a Session by emitting a [Session Start Message](#session-start-message), which carries a Session ID that identifies the Session, the Transfer number of the next Transfer the sender will start, and the size of the sender's Transfer Window, which MUST NOT change during the Session.
+
+A sender MUST start a new Session each time it starts or restarts, and MUST emit a Session Start Message before any Transfer Message of the Session, either earlier in the same Link-layer PDU or in an earlier Link-layer PDU.  A sender MAY also start a new Session at other times, for example to change the size of its Transfer Window, but doing so causes receivers to cancel any Transfers in progress.  A sender SHOULD choose the Session ID of each new Session at random, so that it differs from the Session ID of any previous Session with high probability, without requiring the sender to retain state across restarts.
+
+As the Transfer Messages of a new Session could be misinterpreted by a receiver that has not received its Session Start Message, a sender SHOULD repeat the Session Start Message in several Link-layer PDUs at the start of a Session, each time preceding any Transfer Messages in the same PDU.  A sender SHOULD also emit a Session Start Message periodically throughout the Session, so that a receiver that missed the start of the Session, for example because it started or restarted after the sender, can join the Session; such Messages can often be emitted in space in a Link-layer PDU that would otherwise be filled with padding.  The Next Transfer Number in a Session Start Message reflects the state of the sender when the Message is emitted, so a Session Start Message emitted later in a Session is not necessarily an exact copy of an earlier one.
+
+On receipt of a Session Start Message, a receiver MUST ignore the Message if it carries the Session ID of the receiver's current Session.  Otherwise, the receiver MUST start the new Session: it considers all Transfers of any previous Session [cancelled](#cancelling-transfers); adopts the Session ID and Transfer Window size carried in the Message; and sets its greatest Transfer number to the Next Transfer Number minus one, modulo 2^32, so that the next Transfer started by the sender is considered new.  As Transfer numbers are only meaningful within a Session, any Transfer Message subsequently received is associated with a Transfer of the new Session, even if its Transfer number matches that of a Transfer of a previous Session.  Pseudocode is given in [](#fig-windowing).
+
+A Session Start Message from a previous Session that is received after one from the current Session, for example due to the reordering of Link-layer PDUs, causes a receiver to restart the previous Session, cancelling the Transfers in progress of the current Session, until it receives a further Session Start Message of the current Session.  This is expected to be rare, as it requires Link-layer PDUs emitted before a sender restart to be delivered after those emitted following it.
 
 # Handling Link-layer PDU Loss {#repetition}
 
@@ -325,8 +353,9 @@ Similarly, a receiver that parses a Hint Item with a Hint Type that it does not 
 A Message is invalid if:
 
 - it is truncated, i.e. the Link-layer PDU ends before the end of the four octet Message header, or before the end of the Message as indicated by its Length field;
-- the 'H' flag is set, and its Hint Items extend beyond the end of the Message as indicated by its Length field; or
-- its Message Content is too short to contain the fields defined for its Message type, or otherwise does not meet the length requirements defined for its Message type.
+- the 'H' flag is set, and its Hint Items extend beyond the end of the Message as indicated by its Length field;
+- its Message Content is too short to contain the fields defined for its Message type, or otherwise does not meet the length requirements defined for its Message type; or
+- the definition of its Message type identifies it as invalid for any other reason.
 
 A receiver MUST discard an invalid Message, and continue processing any subsequent Messages in the Link-layer PDU.
 
@@ -340,11 +369,38 @@ The following standard protocol Messages are defined:
 
 The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.
 
-Because it conveys a complete Bundle, a Bundle Message is not a Transfer: it has no Transfer number and is not subject to the [Transfer Window](#transfer-window), which bounds only the number of segmented Transfers that can be simultaneously in progress.
+Because it conveys a complete Bundle, a Bundle Message is not a Transfer: it has no Transfer number and is not subject to the [Transfer Window](#transfer-window), which bounds only the number of segmented Transfers that can be simultaneously in progress.  A receiver therefore processes a Bundle Message whether or not a [Session](#sessions) has started.
 
 A Bundle Message has a type of 2. The Message Content MUST be a valid Bundle.
 
 Emitting a Bundle Message with a Length field value that indicates no Bundle content (e.g., a length of 0 if no metadata is present) only adds control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+
+## Session Start Message
+
+The Session Start Message is used by a sender to start a [Session](#sessions), and to announce the parameters of the Session to receivers.
+
+A Session Start Message has a type of 7. The Message Content field is formatted as follows:
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Session ID                                                    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Next Transfer Number                                          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Transfer Window Size          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Session ID:
+: The identifier of the Session, encoded as a 32-bit unsigned integer in network byte order.
+
+Next Transfer Number:
+: The Transfer number of the next Transfer the sender will start, at the time the Message is emitted, encoded as a 32-bit unsigned integer in network byte order.
+
+Transfer Window Size:
+: The size of the sender's [Transfer Window](#transfer-window) for the Session, encoded as a 16-bit unsigned integer in network byte order.
+
+The Message Content of a Session Start Message, excluding any Hint Items, is exactly 10 octets in length.  A Session Start Message with Message Content of any other length, or with a Transfer Window Size that does not meet the requirements of [](#transfer-window), is invalid, see [](#invalid-messages).
 
 ## Transfer Segment Message
 
@@ -510,6 +566,7 @@ The initial values for the registry are:
 | 4 | [Transfer End Message](#transfer-end-message) | This document |
 | 5 | [Transfer Cancel Message](#transfer-cancel-message) | This document |
 | 6 | Reserved to avoid clash with BPv6 | This document |
+| 7 | [Session Start Message](#session-start-message) | This document |
 | 0x80..0x9F | Reserved to avoid clash with BPv7 Bundle (CBOR array) | This document |
 {: #tab-message-types-vals align="left" title="BTPU Message Types initial values"}
 
