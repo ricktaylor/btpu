@@ -131,7 +131,7 @@ Transfer:
 : The context in which the transmission of the Segments of a single Bundle occurs, see [](#transfers).
 
 Transfer Message:
-: A Message that carries the Transfer number of the Transfer it is associated with: the [Transfer Segment](#transfer-segment-message), [Transfer End](#transfer-end-message), and [Transfer Cancel](#transfer-cancel-message) Messages, and any Message defined as a Transfer Message by another specification.
+: One of the [Transfer Segment](#transfer-segment-message), [Transfer End](#transfer-end-message), and [Transfer Cancel](#transfer-cancel-message) Messages, which carry the Transfer number of the Transfer with which they are associated, or any other Message that another specification defines to be a Transfer Message.
 
 # Protocol Overview
 
@@ -159,11 +159,11 @@ The algorithm used to pad and pack Messages efficiently into Link-layer PDUs is 
 
 # Segmentation and Transfers {#transfers}
 
-As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, if a complete Bundle can fit in the next Link-layer PDU, then the Bundle SHOULD be transferred without segmentation, see the [Bundle Message](#bundle-message).
+As described in the [Protocol Overview](#protocol-overview), in order to transfer Bundles larger than a single Link-layer PDU into multiple PDUs, Bundles are be divided into a sequence of Segments by the sender and each Segment is emitted in its own a Message. However, a complete Bundle that can fit in the next Link-layer PDU can instead be transferred without segmentation, see the [Bundle Message](#bundle-message).
 
 Each Segment is assigned a monotonically increasing integral Segment Index that indicates the relative position of the Segment within the total sequence of Segments, with zero (0) indicating the first segment; i.e. Segments are ordered 0 to N, where N is the Segment Index in the Transfer End Message.
 
-The Segments of a Bundle MUST be emitted by the sender as a series of [Transfer Segment Messages](#transfer-segment-message) carrying the same Transfer identifier, starting with Segment Index zero (0).  The end of a transfer MUST be indicated by emitting a [Transfer End Message](#transfer-end-message), including the index and data of the final Segment.
+The Segments of a Bundle, other than the final Segment, MUST be emitted by the sender as a series of [Transfer Segment Messages](#transfer-segment-message) carrying the same Transfer identifier, starting with Segment Index zero (0).  The end of a transfer MUST be indicated by emitting a [Transfer End Message](#transfer-end-message), including the index and data of the final Segment.  A Transfer always consists of at least two Segments, as a Bundle that would fit in a single Segment is transferred in a [Bundle Message](#bundle-message) instead.
 
 In addition to a Segment Index, every Segment is associated with a Transfer that provides context to the sequence of Segments to enable the correct reassembly of the original Bundle. Each Transfer is assigned a number as an identifier, with each identified Transfer mapping to the segmentation of a single Bundle.
 
@@ -369,7 +369,7 @@ The following standard protocol Messages are defined:
 
 ## Bundle Message
 
-The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.
+The Bundle Message is used to encapsulate an entire Bundle, and SHOULD be used by an implementation when a Bundle will fit in its entirety in a single Link-layer PDU to avoid the overhead of segmentation, and reducing the risk of the total loss of a Bundle if one or more unnecessary segments of a Bundle is lost.  A Bundle that is emitted in its entirety in a single Message MUST be emitted in a Bundle Message: a sender MUST NOT emit a Transfer consisting of a single Segment.
 
 Because it conveys a complete Bundle, a Bundle Message is not a Transfer: it has no Transfer number and is not subject to the [Transfer Window](#transfer-window), which bounds only the number of segmented Transfers that can be simultaneously in progress.  A receiver therefore processes a Bundle Message whether or not a [Session](#sessions) has started.
 
@@ -457,6 +457,8 @@ Segment Data:
 : The octets of the final Segment of the Transfer, with the length calculated as the Message content length excluding the eight (8) octets of the Transfer Number and Segment Index.
 
 Transfer End Messages SHOULD NOT have zero octets of Segment Data, i.e. the total length of the Message SHOULD be greater than 12 octets.  Such Messages only add control-plane overhead and SHOULD NOT be used as an alternative form of padding.
+
+As a Transfer always consists of at least two Segments, see [](#bundle-message), a Transfer End Message with a Segment Index of zero (0) is invalid, see [](#invalid-messages).
 
 ## Transfer Cancel Message
 
