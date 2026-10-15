@@ -169,7 +169,7 @@ A receiver reassembles the transferred Bundle by concatenating the Segments that
 
 In order to support the transmission of Bundles with different priorities, Transfer Messages associated with different Transfers, i.e. with different Transfer numbers, MAY be interleaved.  This allows senders to interrupt the emission of a sequence of Segments associated with one Transfer with one or more Segments of another Transfer, preventing a large lower priority Transfer blocking a higher priority Transfers.
 
-## Cancelling Transfers {#cancelled}
+## Cancelling Transfers {#cancelling-transfers}
 
 A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A receiver of a Transfer Cancel Message SHOULD discard any segments already received and MUST ignore any further Messages associated with the Transfer.
 
@@ -179,7 +179,7 @@ Because Messages can be lost in transmission due to the loss of Link-layer PDUs,
 
 The sender MUST maintain a reference to the greatest Transfer number used in any emitted Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
-Each receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelled).  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number. This margin allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
+Each receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number. This margin allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
 The size of the Transfer Window at a receiver MUST NOT be smaller than the size of the Transfer Window at the sender; the simplest way to ensure this is to configure the same size at the sender and all receivers, which is RECOMMENDED.  Transfer Window sizes MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
