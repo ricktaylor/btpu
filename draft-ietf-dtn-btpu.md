@@ -257,6 +257,8 @@ As the Transfer Messages of a new Session could be misinterpreted by a receiver 
 
 On receipt of a Session Start Message, a receiver MUST ignore the Message if it carries the Session ID of the receiver's current Session.  Otherwise, the receiver MUST start the new Session: it considers all Transfers of any previous Session [cancelled](#cancelling-transfers); adopts the Session ID and Transfer Window size carried in the Message; and sets its greatest Transfer number to the Next Transfer Number minus one, modulo 2^32, so that the next Transfer started by the sender is considered new.  As Transfer numbers are only meaningful within a Session, any Transfer Message subsequently received is associated with a Transfer of the new Session, even if its Transfer number matches that of a Transfer of a previous Session.  Pseudocode is given in [](#fig-windowing).
 
+As a receiver ignores any Session Start Message for its current Session, it only processes the [Hint Items](#hint-items) of the Session Start Message that started the Session.  Hint Types valid in the Session Start Message therefore SHOULD carry information that does not change during a Session.
+
 A Session Start Message from a previous Session that is received after one from the current Session, for example due to the reordering of Link-layer PDUs, causes a receiver to restart the previous Session, cancelling the Transfers in progress of the current Session, until it receives a further Session Start Message of the current Session.  This is expected to be rare, as it requires Link-layer PDUs emitted before a sender restart to be delivered after those emitted following it.
 
 # Handling Link-layer PDU Loss {#repetition}
@@ -318,7 +320,7 @@ RFU (Reserved for Future Use):
 
 ## Hint Items {#hint-items}
 
-To allow the transfer of optional additional information, Messages can carry extra information in the form of Hint Items. Because Messages can be lost in transmission, this metadata provides additional information about the Transfer itself, rather than being particular to the containing Message, and MAY be repeated in multiple different or repeated Messages.
+To allow the transfer of optional additional information, Messages can carry extra information in the form of Hint Items. Because Messages can be lost in transmission, a Hint Item provides additional information about the entity to which the containing Message relates, for example the Transfer of a Transfer Message, the Bundle carried by a Bundle Message, or the Session started by a Session Start Message, rather than information particular to the containing Message itself, and MAY be repeated in multiple different or repeated Messages.  The definition of each Hint Type specifies the Message types in which it is valid, and the definition of a Message type can specify additional Hint Types that are valid in it, see [](#invalid-messages).
 
 If the 'H' flag is set in the Message header, the header is followed by one or more Hint Items. Each item is encoded in a Type-Length-Value format, with a 2-octet header followed by a variable-length value. This format intentionally omits a flags field to prevent nested metadata.
 
@@ -359,7 +361,7 @@ A Message is invalid if:
 
 A receiver MUST discard an invalid Message, and continue processing any subsequent Messages in the Link-layer PDU.
 
-A Hint Item that does not meet the requirements defined for its Hint Type is invalid, and MUST be ignored by a receiver as if it were an unrecognized Hint Item.  An invalid Hint Item does not make the containing Message invalid.
+A Hint Item is invalid if it is carried in a Message of a type in which its Hint Type is not valid, or if it does not meet the other requirements defined for its Hint Type.  An invalid Hint Item MUST be ignored by a receiver as if it were an unrecognized Hint Item, and does not make the containing Message invalid.
 
 # Message Definitions
 
@@ -508,7 +510,7 @@ The following Hint Items are defined in this document:
 
 The Bundle Length Hint Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate the necessary memory to reassemble the complete bundle.
 
-This Hint Item MAY be included in a Transfer Segment Message or a Transfer End Message. Receivers SHOULD ignore this Hint Item if encountered in other message types.
+This Hint Item is valid in Transfer Segment and Transfer End Messages.
 
 The Hint Item has a Hint Type of 0, and its layout is as follows:
 
@@ -576,7 +578,7 @@ The initial value of 6 is reserved to ensure that a Link-layer PDU containing a 
 
 IANA is requested to create a new registry entitled "BTPU Hint Types", in the existing "Bundle Protocol" registry group. The registration procedures for this registry, using terms defined in {{!RFC8126}}, is:
 
-Specifications defining new Hint Types MUST specify which Message types the Hint is applicable to, and SHOULD specify receiver behavior when the Hint is encountered in other Message types.
+Specifications defining new Hint Types MUST specify the Message types in which the Hint is valid, see [](#invalid-messages).
 
 | Values | Registration Procedure |
 |:-------:|:------ |
