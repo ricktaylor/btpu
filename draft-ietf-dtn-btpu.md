@@ -169,7 +169,7 @@ In addition to a Segment Index, every Segment is associated with a Transfer that
 
 Transfer numbers are expressed as 32-bit unsigned integers. A sender MAY choose any value for the first Transfer number of a [Session](#sessions), and each subsequent Transfer MUST use the next numeric value in the sequence.  To avoid placing a limit on the total number of Transfers between peers, numbers are allowed to "roll-over" to zero and repeat, i.e. the next number in the sequence is the previous number incremented by one, modulo 2^32.
 
-A receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the ascending order of their Segment Index.  The Segment Index in the Transfer End Message indicates the final Segment Index (N); a transfer is complete when Segments with indices 0 through N have been received.  Once all the Segments have been received and concatenated, a receiver is expected to pass the recombined Bundle to an upper layer for further processing.
+A receiver reassembles the transferred Bundle by concatenating the Segments that share a common Transfer number in the ascending order of their Segment Index.  The Segment Index in the Transfer End Message indicates the final Segment Index (N); a transfer is complete when Segments with indices 0 through N have been received.  Once all the Segments have been received and concatenated, a receiver is expected to pass the recombined Bundle to an upper layer for further processing.  A receiver MUST NOT commit resources for reassembly on the basis of values declared by the sender, such as the Segment Index of a Transfer End Message or a [Bundle Length Hint](#bundle-length-hint), beyond its own local limits.
 
 ## Interleaving Transfers
 
@@ -177,7 +177,7 @@ In order to support the transmission of Bundles with different priorities, Trans
 
 ## Cancelling Transfers {#cancelling-transfers}
 
-A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A Transfer is also considered cancelled when its Transfer number leaves the receiver's [Transfer Window](#transfer-window), or when a new [Session](#sessions) starts.  When a Transfer is cancelled, a receiver MUST discard any Segments of the Transfer already received, and MUST ignore any further Messages associated with the Transfer, so that the Bundle is not delivered to an upper layer unless the Transfer was already complete.
+A Transfer can be aborted by the sender while a Transfer is in progress by emitting a [Transfer Cancel Message](#transfer-cancel-message) containing the identifier of the Transfer to cancel.  A Transfer is also considered cancelled when its Transfer number leaves the receiver's [Transfer Window](#transfer-window), or when a new [Session](#sessions) starts.  A receiver MAY also consider any Transfer cancelled in order to protect its resources, for example to enforce local limits on reassembly memory, on the size of a Bundle, or on the time for which a Transfer can remain incomplete.  When a Transfer is cancelled, a receiver MUST discard any Segments of the Transfer already received, and MUST ignore any further Messages associated with the Transfer, so that the Bundle is not delivered to an upper layer unless the Transfer was already complete.
 
 # Transfer Window {#transfer-window}
 
@@ -508,7 +508,7 @@ The following Hint Items are defined in this document:
 
 ## Bundle Length Hint
 
-The Bundle Length Hint Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate the necessary memory to reassemble the complete bundle.
+The Bundle Length Hint Item is used to signal the total length of a bundle that is being transferred in segments. This allows a receiver to pre-allocate memory to reassemble the complete bundle, within the limits described in [](#transfers).
 
 This Hint Item is valid in Transfer Segment and Transfer End Messages.
 
@@ -531,6 +531,10 @@ A sender SHOULD choose the smallest possible length that can accommodate the tot
 # Security Considerations
 
 This protocol does not define any measures to protect Messages or their content.  There might be link-layer mechanisms to protect the transmission of frames against over-hearing and interference, and upper layer mechanisms, such as BPSec defined in {{!RFC9172}}, can be used to provide integrity and protection at a higher layer.  Therefore transport-layer security is considered out of scope for the protocol, and lower and/or upper layer mechanisms MUST be used to provide security.
+
+A receiver commits resources, principally memory, to each Transfer in progress until the Transfer completes or is cancelled.  Although the [Transfer Window](#transfer-window) bounds the number of Transfers that can be in progress at once, it does not bound their size or duration: a sender, or any entity able to inject Link-layer PDUs, could start Transfers and never complete them, or declare very large Bundles via a Bundle Length Hint or the Segment Index of a Transfer End Message, in order to exhaust the resources of a receiver.  For this reason a receiver is permitted to cancel any Transfer to protect its resources, see [](#cancelling-transfers), and must not commit resources on the basis of values declared by the sender beyond its own local limits, see [](#transfers).  Limits on the time for which a Transfer can remain incomplete need to take account of the expected duration of disruption of the link.
+
+Similarly, an injected Transfer Cancel or Session Start Message can cause a receiver to cancel Transfers in progress.  Protection against the injection of Link-layer PDUs relies on the link-layer mechanisms described above.
 
 # Deployment Considerations
 
