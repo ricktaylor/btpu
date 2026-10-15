@@ -4,8 +4,8 @@
 
 Delay/Disruption Tolerant Networking                           R. Taylor
 Internet-Draft                                      Aalyria Technologies
-Intended status: Standards Track                        7 September 2026
-Expires: 11 March 2027
+Intended status: Standards Track                         15 October 2026
+Expires: 18 April 2027
 
 
                Bundle Transfer Protocol - Unidirectional
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 March 2027.
+   This Internet-Draft will expire on 18 April 2027.
 
 Copyright Notice
 
@@ -89,18 +89,21 @@ Table of Contents
      4.1.  Interleaving Transfers
      4.2.  Cancelling Transfers
    5.  Transfer Window
+     5.1.  Sessions
    6.  Handling Link-layer PDU Loss
    7.  Message Format
      7.1.  Message Flags
      7.2.  Hint Items
      7.3.  Unrecognized Messages and Hint Items
+     7.4.  Invalid Messages and Hint Items
    8.  Message Definitions
      8.1.  Bundle Message
-     8.2.  Transfer Segment Message
-     8.3.  Transfer End Message
-     8.4.  Transfer Cancel Message
-     8.5.  Definite Padding Message
-     8.6.  Indefinite Padding Message
+     8.2.  Session Start Message
+     8.3.  Transfer Segment Message
+     8.4.  Transfer End Message
+     8.5.  Transfer Cancel Message
+     8.6.  Definite Padding Message
+     8.7.  Indefinite Padding Message
    9.  Standard Hint Items
      9.1.  Bundle Length Hint
    10. Security Considerations
@@ -218,8 +221,18 @@ Table of Contents
       Bundles can be subdivided into Segments in order to fit within a
       Link-layer PDU, see Section 4.
 
+   Session:  The context, identified by a Session ID announced by the
+      sender in a Session Start Message (Section 8.2), within which
+      Transfer numbers are meaningful, see Section 5.1.
+
    Transfer:  The context in which the transmission of the Segments of a
       single Bundle occurs, see Section 4.
+
+   Transfer Message:  One of the Transfer Segment (Section 8.3),
+      Transfer End (Section 8.4), and Transfer Cancel (Section 8.5)
+      Messages, which carry the Transfer number of the Transfer with
+      which they are associated, or any other Message that another
+      specification defines to be a Transfer Message.
 
 3.  Protocol Overview
 
@@ -271,8 +284,8 @@ Table of Contents
    size of a Link-layer PDU, an implementation will likely need to add
    padding to the PDU so that the Link-layer PDU size requirements are
    met.  Two Messages are available for this purpose: The Definite
-   Padding Message (Section 8.5) and the Indefinite Padding Message
-   (Section 8.6).  Padding Messages are valid at any point within a
+   Padding Message (Section 8.6) and the Indefinite Padding Message
+   (Section 8.7).  Padding Messages are valid at any point within a
    Link-layer PDU.
 
    It is RECOMMENDED that implementations use the Definite Padding
@@ -297,9 +310,9 @@ Table of Contents
    As described in the Protocol Overview (Section 3), in order to
    transfer Bundles larger than a single Link-layer PDU into multiple
    PDUs, Bundles are be divided into a sequence of Segments by the
-   sender and each Segment is emitted in its own a Message.  However, if
-   a complete Bundle can fit in the next Link-layer PDU, then the Bundle
-   SHOULD be transferred without segmentation, see the Bundle Message
+   sender and each Segment is emitted in its own a Message.  However, a
+   complete Bundle that can fit in the next Link-layer PDU can instead
+   be transferred without segmentation, see the Bundle Message
    (Section 8.1).
 
    Each Segment is assigned a monotonically increasing integral Segment
@@ -308,11 +321,14 @@ Table of Contents
    segment; i.e. Segments are ordered 0 to N, where N is the Segment
    Index in the Transfer End Message.
 
-   The Segments of a Bundle MUST be emitted by the sender as a series of
-   Transfer Segment Messages (Section 8.2) carrying the same Transfer
-   identifier, starting with Segment Index zero (0).  The end of a
-   transfer MUST be indicated by emitting a Transfer End Message
-   (Section 8.3), including the index and data of the final Segment.
+   The Segments of a Bundle, other than the final Segment, MUST be
+   emitted by the sender as a series of Transfer Segment Messages
+   (Section 8.3) carrying the same Transfer identifier, starting with
+   Segment Index zero (0).  The end of a transfer MUST be indicated by
+   emitting a Transfer End Message (Section 8.4), including the index
+   and data of the final Segment.  A Transfer always consists of at
+   least two Segments, as a Bundle that would fit in a single Segment is
+   transferred in a Bundle Message (Section 8.1) instead.
 
    In addition to a Segment Index, every Segment is associated with a
    Transfer that provides context to the sequence of Segments to enable
@@ -320,13 +336,13 @@ Table of Contents
    assigned a number as an identifier, with each identified Transfer
    mapping to the segmentation of a single Bundle.
 
-   Transfer numbers are expressed as 32-bit unsigned integers.  A
-   sending implementation SHOULD choose a random value between 0 and
-   2^32-1 for the first Transfer number, and each subsequent Transfer
-   MUST use the next numeric value in the sequence.  To avoid placing a
-   limit on the total number of Transfers between peers, numbers are
-   allowed to "roll-over" to zero and repeat, i.e. the next number in
-   the sequence is the previous number incremented by one, modulo 2^32.
+   Transfer numbers are expressed as 32-bit unsigned integers.  A sender
+   MAY choose any value for the first Transfer number of a Session
+   (Section 5.1), and each subsequent Transfer MUST use the next numeric
+   value in the sequence.  To avoid placing a limit on the total number
+   of Transfers between peers, numbers are allowed to "roll-over" to
+   zero and repeat, i.e. the next number in the sequence is the previous
+   number incremented by one, modulo 2^32.
 
    A receiver reassembles the transferred Bundle by concatenating the
    Segments that share a common Transfer number in the ascending order
@@ -335,7 +351,10 @@ Table of Contents
    when Segments with indices 0 through N have been received.  Once all
    the Segments have been received and concatenated, a receiver is
    expected to pass the recombined Bundle to an upper layer for further
-   processing.
+   processing.  A receiver MUST NOT commit resources for reassembly on
+   the basis of values declared by the sender, such as the Segment Index
+   of a Transfer End Message or a Bundle Length Hint (Section 9.1),
+   beyond its own local limits.
 
 4.1.  Interleaving Transfers
 
@@ -350,10 +369,18 @@ Table of Contents
 4.2.  Cancelling Transfers
 
    A Transfer can be aborted by the sender while a Transfer is in
-   progress by emitting a Transfer Cancel Message (Section 8.4)
-   containing the identifier of the Transfer to cancel.  A receiver of a
-   Transfer Cancel Message SHOULD discard any segments already received
-   and MUST ignore any further Messages associated with the Transfer.
+   progress by emitting a Transfer Cancel Message (Section 8.5)
+   containing the identifier of the Transfer to cancel.  A Transfer is
+   also considered cancelled when its Transfer number leaves the
+   receiver's Transfer Window (Section 5), or when a new Session
+   (Section 5.1) starts.  A receiver MAY also consider any Transfer
+   cancelled in order to protect its resources, for example to enforce
+   local limits on reassembly memory, on the size of a Bundle, or on the
+   time for which a Transfer can remain incomplete.  When a Transfer is
+   cancelled, a receiver MUST discard any Segments of the Transfer
+   already received, and MUST ignore any further Messages associated
+   with the Transfer, so that the Bundle is not delivered to an upper
+   layer unless the Transfer was already complete.
 
 5.  Transfer Window
 
@@ -366,72 +393,167 @@ Table of Contents
    strictly defines the range of identifiers of Transfers in progress.
 
    The sender MUST maintain a reference to the greatest Transfer number
-   used in any emitted Message, and MUST NOT emit any Message with a
-   Transfer number less than or equal to the latest minus the size of
-   the Transfer Window, taking into account the modulo 2^32 roll-over.
+   used in any emitted Transfer Message, and MUST NOT emit any Message
+   with a Transfer number less than or equal to the latest minus the
+   size of the Transfer Window, taking into account the modulo 2^32
+   roll-over.
+
+   A receiver applies the algorithm described below to every Transfer
+   Message it receives, except an invalid (Section 7.4) Transfer
+   Message, which is discarded, and any Transfer Message received while
+   the receiver has no current Session (Section 5.1), which MUST be
+   ignored.  The algorithm MUST be applied, advancing the Transfer
+   Window if required, before the content of the Message is processed,
+   and the Message MUST be ignored if its Transfer is not then in
+   progress.  A Transfer is in progress at a receiver while its Transfer
+   number is within the receiver's Transfer Window, whether or not any
+   Messages associated with the Transfer have been received.
 
    Each receiver MUST maintain a reference to the greatest Transfer
-   number received in any Message.  When a Transfer Message is received
-   with a Transfer number greater than the greatest previously received,
-   the new Transfer number is considered the greatest Transfer number,
-   and Transfers with number less than or equal to the latest minus the
-   size of the Transfer Window MUST be considered Section 4.2.  Because
-   of Transfer number roll-over, half the number space of 2^32 and
-   window size is used to determine if a number is older or newer than
-   the latest Transfer number.  This margin allows a receiver that has
+   number of the current Session, which is initialized when the Session
+   starts, see Section 5.1.  When a Transfer Message is received with a
+   Transfer number greater than the greatest previously received, the
+   new Transfer number is considered the greatest Transfer number, and
+   Transfers with number less than or equal to the latest minus the size
+   of the Transfer Window MUST be considered cancelled (Section 4.2).
+   Because of Transfer number roll-over, a Transfer number T is greater
+   than the greatest previously received Transfer number G if (T - G)
+   modulo 2^32 is non-zero and less than 2^31 minus the size of the
+   Transfer Window.  This is serial number arithmetic, as defined in
+   [RFC1982] with a SERIAL_BITS value of 32, with the range reduced by
+   the size of the Transfer Window, so that no Transfer number that was
+   within the Transfer Window before an advance of the greatest Transfer
+   number can be considered greater than the new greatest Transfer
+   number.  Using half the number space allows a receiver that has
    experienced a temporary loss of signal to correctly resume
    processing, distinguishing genuinely new Transfers from those that
    have wrapped around the number space and are obsolete.  Pseudocode
    for the algorithm is given in Figure 2.
 
-   The size of the Transfer Window at a receiver MUST NOT be smaller
-   than the size of the Transfer Window at the sender; the simplest way
-   to ensure this is to configure the same size at the sender and all
-   receivers, which is RECOMMENDED.  Transfer Window sizes MUST be
-   configured via some out-of-band mechanism.  The Transfer Window size
-   MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be
-   16.
+   The size of the Transfer Window is chosen by the sender, and
+   announced to receivers in the Session Start Message (Section 8.2); a
+   receiver MUST use the announced size for the duration of the Session.
+   The Transfer Window size MUST be at least 4, MUST be less than 2^12,
+   and is RECOMMENDED to be 16.
    // 16 is an arbitrary number, and needs discussing by the WG.
 
-   const WINDOW_SIZE  # Configured transfer window size
-   var GREATEST = NIL # Greatest received transfer number, initially NIL
+ var SESSION_ID = NIL  # Current session ID, initially NIL
+ var WINDOW_SIZE       # Transfer window size of the current session
+ var GREATEST          # Greatest transfer number of the current session
 
-   # Function to check if a transfer is valid within the current window
-   FUNCTION isTransferValid(T):
-       # Ensure Transfer T is within the
-       #  sliding window defined by WINDOW_SIZE
-       RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
+ # Function called for every valid Session Start Message received
+ FUNCTION processSessionStart(ID, NEXT, SIZE):
+     IF ID = SESSION_ID THEN
+         # A repeated Session Start for the current session
+         RETURN
+     # A new session, cancel all transfers of the previous session
+     CANCEL_ALL_TRANSFERS()
+     SESSION_ID ← ID
+     WINDOW_SIZE ← SIZE
+     GREATEST ← (NEXT - 1 + 2^32) MOD 2^32
 
-   # Function to check if the transfer is considered a "new" transfer
-   FUNCTION isNewTransfer(T):
-       IF GREATEST IS NIL THEN
-           # The first transfer is always considered new
-           RETURN TRUE
-       IF T = GREATEST THEN
-           # A repeated Message for the greatest transfer
-           #  is in progress, not new
-           RETURN FALSE
-       # Check if the transfer is within the valid window range
-       #  (half of the number space + window size)
-       RETURN ((T - GREATEST + 2^32) MOD 2^32) <
-                        (2^32 / 2) + (WINDOW_SIZE / 2)
+ # Function to check if a transfer is in progress
+ FUNCTION isTransferInProgress(T):
+     # Ensure Transfer T is within the
+     #  sliding window defined by WINDOW_SIZE
+     RETURN ((GREATEST - T + 2^32) MOD 2^32) < WINDOW_SIZE
 
-   # Main function to process a transfer and manage the sliding window
-   FUNCTION processTransfer(T):
-       IF isNewTransfer(T) THEN
-           # New transfer, update the greatest received transfer number
-           GREATEST ← T
-           # Cancel transfers that are now outside the window
-           CANCEL_OUTDATED_TRANSFERS()
-       ELSE IF isTransferValid(T) THEN
-           # Transfer is in progress, continue handling it
-           CONTINUE_PROCESSING(T)
-       ELSE
-           # Transfer is invalid (outside the window), ignore it
-           IGNORE_MESSAGE(T)
+ # Function to check if the transfer is considered a "new" transfer
+ FUNCTION isNewTransfer(T):
+     IF T = GREATEST THEN
+         # A repeated Message for the greatest transfer
+         #  is in progress, not new
+         RETURN FALSE
+     # Check if the transfer is ahead of GREATEST by less than
+     #  half of the number space, less the window size
+     RETURN ((T - GREATEST + 2^32) MOD 2^32) <
+                      (2^32 / 2) - WINDOW_SIZE
 
-      Figure 2: A receiver's algorithm for determining Transfer number
-                        validity and sliding window
+ # Main function, called for every Transfer Message received
+ #  that is not invalid, to manage the sliding window and
+ #  process the Message
+ FUNCTION processTransferMessage(T):
+     IF SESSION_ID IS NIL THEN
+         # No session has started, ignore it
+         IGNORE_MESSAGE(T)
+         RETURN
+     IF isNewTransfer(T) THEN
+         # New transfer, update the greatest received transfer number
+         GREATEST ← T
+         # Cancel transfers that are now outside the window
+         CANCEL_OUTDATED_TRANSFERS()
+     IF isTransferInProgress(T) THEN
+         # Transfer is in progress, continue handling it
+         CONTINUE_PROCESSING(T)
+     ELSE
+         # Transfer is not in progress (outside the window),
+         #  ignore it
+         IGNORE_MESSAGE(T)
+
+     Figure 2: A receiver's algorithm for managing Sessions and the
+                        sliding Transfer Window
+
+5.1.  Sessions
+
+   Transfer numbers, and the state a receiver holds for each Transfer,
+   are only meaningful within a Session.  A sender starts a Session by
+   emitting a Session Start Message (Section 8.2), which carries a
+   Session ID that identifies the Session, the Transfer number of the
+   next Transfer the sender will start, and the size of the sender's
+   Transfer Window, which MUST NOT change during the Session.
+
+   A sender MUST start a new Session each time it starts or restarts,
+   and MUST emit a Session Start Message before any Transfer Message of
+   the Session, either earlier in the same Link-layer PDU or in an
+   earlier Link-layer PDU.  A sender MAY also start a new Session at
+   other times, for example to change the size of its Transfer Window,
+   but doing so causes receivers to cancel any Transfers in progress.  A
+   sender SHOULD choose the Session ID of each new Session at random, so
+   that it differs from the Session ID of any previous Session with high
+   probability, without requiring the sender to retain state across
+   restarts.
+
+   As the Transfer Messages of a new Session could be misinterpreted by
+   a receiver that has not received its Session Start Message, a sender
+   SHOULD repeat the Session Start Message in several Link-layer PDUs at
+   the start of a Session, each time preceding any Transfer Messages in
+   the same PDU.  A sender SHOULD also emit a Session Start Message
+   periodically throughout the Session, so that a receiver that missed
+   the start of the Session, for example because it started or restarted
+   after the sender, can join the Session; such Messages can often be
+   emitted in space in a Link-layer PDU that would otherwise be filled
+   with padding.  The Next Transfer Number in a Session Start Message
+   reflects the state of the sender when the Message is emitted, so a
+   Session Start Message emitted later in a Session is not necessarily
+   an exact copy of an earlier one.
+
+   On receipt of a Session Start Message, a receiver MUST ignore the
+   Message if it carries the Session ID of the receiver's current
+   Session.  Otherwise, the receiver MUST start the new Session: it
+   considers all Transfers of any previous Session cancelled
+   (Section 4.2); adopts the Session ID and Transfer Window size carried
+   in the Message; and sets its greatest Transfer number to the Next
+   Transfer Number minus one, modulo 2^32, so that the next Transfer
+   started by the sender is considered new.  As Transfer numbers are
+   only meaningful within a Session, any Transfer Message subsequently
+   received is associated with a Transfer of the new Session, even if
+   its Transfer number matches that of a Transfer of a previous Session.
+   Pseudocode is given in Figure 2.
+
+   As a receiver ignores any Session Start Message for its current
+   Session, it only processes the Hint Items (Section 7.2) of the
+   Session Start Message that started the Session.  Hint Types valid in
+   the Session Start Message therefore SHOULD carry information that
+   does not change during a Session.
+
+   A Session Start Message from a previous Session that is received
+   after one from the current Session, for example due to the reordering
+   of Link-layer PDUs, causes a receiver to restart the previous
+   Session, cancelling the Transfers in progress of the current Session,
+   until it receives a further Session Start Message of the current
+   Session.  This is expected to be rare, as it requires Link-layer PDUs
+   emitted before a sender restart to be delivered after those emitted
+   following it.
 
 6.  Handling Link-layer PDU Loss
 
@@ -446,10 +568,12 @@ Table of Contents
    PDUs.  Although every Link-layer PDU transmitted MAY contain
    different Messages, any repeated Message MUST be an exact copy of an
    already emitted Message.  A receiver MAY ignore any duplicate Message
-   already received for an in-progress Transfer.  When segmenting
-   bundles, not all Messages in a Transfer need be repeated the same
-   number of times, and different Transfers can repeat Messages
-   differently.
+   already received for an in-progress Transfer, and MUST ignore any
+   Message associated with a Transfer that it has already completed, so
+   that a Bundle is not delivered to an upper layer more than once.
+   When segmenting bundles, not all Messages in a Transfer need be
+   repeated the same number of times, and different Transfers can repeat
+   Messages differently.
 
    Although it is RECOMMENDED that segments are emitted in ascending
    order of Segment Index; once emitted, any Message MAY be repeated any
@@ -480,7 +604,7 @@ Table of Contents
 7.  Message Format
 
    All protocol Messages except the Indefinite Padding Message
-   (Section 8.6) follow the common "Type-Length-Value" formatting
+   (Section 8.7) follow the common "Type-Length-Value" formatting
    pattern, with each Message being identified by a four octet header
    that encodes the type of the Message, and the length of the content
    of the Message.
@@ -534,10 +658,15 @@ Table of Contents
 
    To allow the transfer of optional additional information, Messages
    can carry extra information in the form of Hint Items.  Because
-   Messages can be lost in transmission, this metadata provides
-   additional information about the Transfer itself, rather than being
-   particular to the containing Message, and MAY be repeated in multiple
-   different or repeated Messages.
+   Messages can be lost in transmission, a Hint Item provides additional
+   information about the entity to which the containing Message relates,
+   for example the Transfer of a Transfer Message, the Bundle carried by
+   a Bundle Message, or the Session started by a Session Start Message,
+   rather than information particular to the containing Message itself,
+   and MAY be repeated in multiple different or repeated Messages.  The
+   definition of each Hint Type specifies the Message types in which it
+   is valid, and the definition of a Message type can specify additional
+   Hint Types that are valid in it, see Section 7.4.
 
    If the 'H' flag is set in the Message header, the header is followed
    by one or more Hint Items.  Each item is encoded in a Type-Length-
@@ -590,9 +719,15 @@ Table of Contents
    format can determine the extent of the bundle, handle it as it would
    the content of a Bundle Message (Section 8.1), and continue
    processing any subsequent Messages in the Link-layer PDU.  A receiver
-   that does not implement the corresponding bundle format cannot
-   determine the extent of the bundle, and MUST NOT attempt to process
-   the remainder of the Link-layer PDU.
+   that does not implement the corresponding bundle format, or that
+   otherwise cannot determine the extent of the bundle, for example
+   because it is malformed, cannot distinguish the end of the bundle
+   from any subsequent Messages or padding, and MUST discard the
+   remainder of the Link-layer PDU, including the bundle.  A sender
+   SHOULD therefore encapsulate a Bundle in a Bundle Message
+   (Section 8.1), rather than emitting it in its native format, unless
+   it is known, for example by configuration, that every receiver
+   implements the format of the Bundle.
 
    Similarly, a receiver that parses a Hint Item with a Hint Type that
    it does not recognize MUST ignore the Hint Item by skipping the
@@ -600,6 +735,33 @@ Table of Contents
    continue processing any subsequent Hint Items and the Message
    Content.  Hint Items are therefore only suitable for carrying
    optional information that can be safely ignored by a receiver.
+
+7.4.  Invalid Messages and Hint Items
+
+   A Message is invalid if:
+
+   *  it is truncated, i.e. the Link-layer PDU ends before the end of
+      the four octet Message header, or before the end of the Message as
+      indicated by its Length field;
+
+   *  the 'H' flag is set, and its Hint Items extend beyond the end of
+      the Message as indicated by its Length field;
+
+   *  its Message Content is too short to contain the fields defined for
+      its Message type, or otherwise does not meet the length
+      requirements defined for its Message type; or
+
+   *  the definition of its Message type identifies it as invalid for
+      any other reason.
+
+   A receiver MUST discard an invalid Message, and continue processing
+   any subsequent Messages in the Link-layer PDU.
+
+   A Hint Item is invalid if it is carried in a Message of a type in
+   which its Hint Type is not valid, or if it does not meet the other
+   requirements defined for its Hint Type.  An invalid Hint Item MUST be
+   ignored by a receiver as if it were an unrecognized Hint Item, and
+   does not make the containing Message invalid.
 
 8.  Message Definitions
 
@@ -611,12 +773,17 @@ Table of Contents
    SHOULD be used by an implementation when a Bundle will fit in its
    entirety in a single Link-layer PDU to avoid the overhead of
    segmentation, and reducing the risk of the total loss of a Bundle if
-   one or more unnecessary segments of a Bundle is lost.
+   one or more unnecessary segments of a Bundle is lost.  A Bundle that
+   is emitted in its entirety in a single Message MUST be emitted in a
+   Bundle Message: a sender MUST NOT emit a Transfer consisting of a
+   single Segment.
 
    Because it conveys a complete Bundle, a Bundle Message is not a
    Transfer: it has no Transfer number and is not subject to the
    Transfer Window (Section 5), which bounds only the number of
-   segmented Transfers that can be simultaneously in progress.
+   segmented Transfers that can be simultaneously in progress.  A
+   receiver therefore processes a Bundle Message whether or not a
+   Session (Section 5.1) has started.
 
    A Bundle Message has a type of 2.  The Message Content MUST be a
    valid Bundle.
@@ -626,7 +793,43 @@ Table of Contents
    adds control-plane overhead and SHOULD NOT be used as an alternative
    form of padding.
 
-8.2.  Transfer Segment Message
+8.2.  Session Start Message
+
+   The Session Start Message is used by a sender to start a Session
+   (Section 5.1), and to announce the parameters of the Session to
+   receivers.
+
+   A Session Start Message has a type of 7.  The Message Content field
+   is formatted as follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Session ID                                                    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Next Transfer Number                                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Transfer Window Size          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Session ID:  The identifier of the Session, encoded as a 32-bit
+      unsigned integer in network byte order.
+
+   Next Transfer Number:  The Transfer number of the next Transfer the
+      sender will start, at the time the Message is emitted, encoded as
+      a 32-bit unsigned integer in network byte order.
+
+   Transfer Window Size:  The size of the sender's Transfer Window
+      (Section 5) for the Session, encoded as a 16-bit unsigned integer
+      in network byte order.
+
+   The Message Content of a Session Start Message, excluding any Hint
+   Items, is exactly 10 octets in length.  A Session Start Message with
+   Message Content of any other length, or with a Transfer Window Size
+   that does not meet the requirements of Section 5, is invalid, see
+   Section 7.4.
+
+8.3.  Transfer Segment Message
 
    The Transfer Segment Message is used to encapsulate a segment of a
    multi-segment Bundle Transfer.
@@ -661,7 +864,7 @@ Table of Contents
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-8.3.  Transfer End Message
+8.4.  Transfer End Message
 
    The Transfer End Message is used to indicate the completion of a
    multi-segment Bundle Transfer, and encapsulate the final segment.
@@ -695,11 +898,17 @@ Table of Contents
    octets.  Such Messages only add control-plane overhead and SHOULD NOT
    be used as an alternative form of padding.
 
-8.4.  Transfer Cancel Message
+   As a Transfer always consists of at least two Segments, see
+   Section 8.1, a Transfer End Message with a Segment Index of zero (0)
+   is invalid, see Section 7.4.
+
+8.5.  Transfer Cancel Message
 
    The Transfer Cancel Message is used to indicate that the indicated
-   Transfer is being aborted, and any prior or later received Segments
-   associated with the Transfer MUST be discarded by a receiver.
+   Transfer is being aborted, and that any Segments associated with the
+   Transfer, whether received before or after the Transfer Cancel
+   Message, are to be discarded by a receiver, as described in
+   Section 4.2.
 
    A Transfer Cancel Message has a type of 5.  The Message Content field
    is formatted as follows:
@@ -714,14 +923,15 @@ Table of Contents
       (Section 5) Transfer that is cancelled, encoded as a 32-bit
       unsigned integer in network byte order.
 
-   The Transfer Cancel Message has no content, and hence has a fixed
-   length of 4 octets.
+   The Message Content of a Transfer Cancel Message, excluding any Hint
+   Items, is exactly 4 octets in length.  A Transfer Cancel Message with
+   Message Content of any other length is invalid, see Section 7.4.
 
-   A peer that receives a Transfer Cancel Message with a Transfer Number
-   field value that does not match the numeric identifier of an
-   in-progress (Section 5) Transfer MUST ignore the Message.
+   Like any Transfer Message, a Transfer Cancel Message is processed as
+   described in Section 5, so a Transfer Cancel Message received before
+   any Segment of the Transfer it cancels still cancels the Transfer.
 
-8.5.  Definite Padding Message
+8.6.  Definite Padding Message
 
    The Definite Padding Message is used to add padding to a Link-layer
    PDU.
@@ -735,7 +945,7 @@ Table of Contents
    value of zero (0), adding a total of four (4) octets of padding to
    the Link-layer PDU.
 
-8.6.  Indefinite Padding Message
+8.7.  Indefinite Padding Message
 
    An Indefinite Padding Message has a type of zero (0), and in order to
    support padding with a minimum total length of one octet, the Message
@@ -767,12 +977,11 @@ Table of Contents
 
    The Bundle Length Hint Item is used to signal the total length of a
    bundle that is being transferred in segments.  This allows a receiver
-   to pre-allocate the necessary memory to reassemble the complete
-   bundle.
+   to pre-allocate memory to reassemble the complete bundle, within the
+   limits described in Section 4.
 
-   This Hint Item MAY be included in a Transfer Segment Message or a
-   Transfer End Message.  Receivers SHOULD ignore this Hint Item if
-   encountered in other message types.
+   This Hint Item is valid in Transfer Segment and Transfer End
+   Messages.
 
    The Hint Item has a Hint Type of 0, and its layout is as follows:
 
@@ -804,6 +1013,26 @@ Table of Contents
    Therefore transport-layer security is considered out of scope for the
    protocol, and lower and/or upper layer mechanisms MUST be used to
    provide security.
+
+   A receiver commits resources, principally memory, to each Transfer in
+   progress until the Transfer completes or is cancelled.  Although the
+   Transfer Window (Section 5) bounds the number of Transfers that can
+   be in progress at once, it does not bound their size or duration: a
+   sender, or any entity able to inject Link-layer PDUs, could start
+   Transfers and never complete them, or declare very large Bundles via
+   a Bundle Length Hint or the Segment Index of a Transfer End Message,
+   in order to exhaust the resources of a receiver.  For this reason a
+   receiver is permitted to cancel any Transfer to protect its
+   resources, see Section 4.2, and must not commit resources on the
+   basis of values declared by the sender beyond its own local limits,
+   see Section 4.  Limits on the time for which a Transfer can remain
+   incomplete need to take account of the expected duration of
+   disruption of the link.
+
+   Similarly, an injected Transfer Cancel or Session Start Message can
+   cause a receiver to cancel Transfers in progress.  Protection against
+   the injection of Link-layer PDUs relies on the link-layer mechanisms
+   described above.
 
 11.  Deployment Considerations
 
@@ -865,25 +1094,28 @@ Table of Contents
    |    Type    | Message                                  | Reference |
    +============+==========================================+===========+
    |     0      | Indefinite Padding Message               | This      |
-   |            | (Section 8.6)                            | document  |
+   |            | (Section 8.7)                            | document  |
    +------------+------------------------------------------+-----------+
    |     1      | Definite Padding Message                 | This      |
-   |            | (Section 8.5)                            | document  |
+   |            | (Section 8.6)                            | document  |
    +------------+------------------------------------------+-----------+
    |     2      | Bundle Message (Section 8.1)             | This      |
    |            |                                          | document  |
    +------------+------------------------------------------+-----------+
    |     3      | Transfer Segment Message                 | This      |
-   |            | (Section 8.2)                            | document  |
-   +------------+------------------------------------------+-----------+
-   |     4      | Transfer End Message                     | This      |
    |            | (Section 8.3)                            | document  |
    +------------+------------------------------------------+-----------+
-   |     5      | Transfer Cancel Message                  | This      |
+   |     4      | Transfer End Message                     | This      |
    |            | (Section 8.4)                            | document  |
+   +------------+------------------------------------------+-----------+
+   |     5      | Transfer Cancel Message                  | This      |
+   |            | (Section 8.5)                            | document  |
    +------------+------------------------------------------+-----------+
    |     6      | Reserved to avoid clash with             | This      |
    |            | BPv6                                     | document  |
+   +------------+------------------------------------------+-----------+
+   |     7      | Session Start Message                    | This      |
+   |            | (Section 8.2)                            | document  |
    +------------+------------------------------------------+-----------+
    | 0x80..0x9F | Reserved to avoid clash with             | This      |
    |            | BPv7 Bundle (CBOR array)                 | document  |
@@ -902,9 +1134,8 @@ Table of Contents
    registration procedures for this registry, using terms defined in
    [RFC8126], is:
 
-   Specifications defining new Hint Types MUST specify which Message
-   types the Hint is applicable to, and SHOULD specify receiver behavior
-   when the Hint is encountered in other Message types.
+   Specifications defining new Hint Types MUST specify the Message types
+   in which the Hint is valid, see Section 7.4.
 
    +============+========================+
    |   Values   | Registration Procedure |
@@ -996,6 +1227,10 @@ Table of Contents
               DOI 10.1109/ieeestd.2022.9844436, ISBN ["9781504487252"],
               July 2022, <https://doi.org/10.1109/ieeestd.2022.9844436>.
 
+   [RFC1982]  Elz, R. and R. Bush, "Serial Number Arithmetic", RFC 1982,
+              DOI 10.17487/RFC1982, August 1996,
+              <https://www.rfc-editor.org/rfc/rfc1982>.
+
    [RFC5050]  Scott, K. and S. Burleigh, "Bundle Protocol
               Specification", RFC 5050, DOI 10.17487/RFC5050, November
               2007, <https://www.rfc-editor.org/rfc/rfc5050>.
@@ -1010,7 +1245,7 @@ Table of Contents
 
    [_5G]      3GPP and C. Devaki, "System architecture for the 5G System
               (5GS)", 21 December 2022, <https://www.3gpp.org/ftp/Specs/
-              archive/23_series/23.501/23501-i00.zip>.
+              archive/23_series/23.501/23501-h70.zip>.
 
 Appendix A.  Examples
 
