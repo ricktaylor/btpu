@@ -179,7 +179,7 @@ Because Messages can be lost in transmission due to the loss of Link-layer PDUs,
 
 The sender MUST maintain a reference to the greatest Transfer number used in any emitted Message, and MUST NOT emit any Message with a Transfer number less than or equal to the latest minus the size of the Transfer Window, taking into account the modulo 2^32 roll-over.
 
-Each receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, half the number space of 2^32 and window size is used to determine if a number is older or newer than the latest Transfer number. This margin allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
+Each receiver MUST maintain a reference to the greatest Transfer number received in any Message.  When a Transfer Message is received with a Transfer number greater than the greatest previously received, the new Transfer number is considered the greatest Transfer number, and Transfers with number less than or equal to the latest minus the size of the Transfer Window MUST be considered [cancelled](#cancelling-transfers).  Because of Transfer number roll-over, a Transfer number T is greater than the greatest previously received Transfer number G if (T - G) modulo 2^32 is non-zero and less than 2^31 minus the size of the Transfer Window.  This is serial number arithmetic, as defined in {{?RFC1982}} with a SERIAL_BITS value of 32, with the range reduced by the size of the Transfer Window, so that no Transfer number that was within the Transfer Window before an advance of the greatest Transfer number can be considered greater than the new greatest Transfer number.  Using half the number space allows a receiver that has experienced a temporary loss of signal to correctly resume processing, distinguishing genuinely new Transfers from those that have wrapped around the number space and are obsolete.  Pseudocode for the algorithm is given in [](#fig-windowing).
 
 The size of the Transfer Window at a receiver MUST NOT be smaller than the size of the Transfer Window at the sender; the simplest way to ensure this is to configure the same size at the sender and all receivers, which is RECOMMENDED.  Transfer Window sizes MUST be configured via some out-of-band mechanism.  The Transfer Window size MUST be at least 4, MUST be less than 2^12, and is RECOMMENDED to be 16. [^1]
 
@@ -201,10 +201,10 @@ The size of the Transfer Window at a receiver MUST NOT be smaller than the size 
             # A repeated Message for the greatest transfer
             #  is in progress, not new
             RETURN FALSE
-        # Check if the transfer is within the valid window range
-        #  (half of the number space + window size)
+        # Check if the transfer is ahead of GREATEST by less than
+        #  half of the number space, less the window size
         RETURN ((T - GREATEST + 2^32) MOD 2^32) <
-                         (2^32 / 2) + (WINDOW_SIZE / 2)
+                         (2^32 / 2) - WINDOW_SIZE
 
     # Main function to process a transfer and manage the sliding window
     FUNCTION processTransfer(T):
